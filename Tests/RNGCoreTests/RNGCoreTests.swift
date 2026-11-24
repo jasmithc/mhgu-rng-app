@@ -249,6 +249,17 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertEqual(ContinueCalc(target: 296_260, poogie: true, bpm: 90).neededWhole, 400)
   }
 
+  /// A half-typed pace (0, empty, absurd) once crashed the app by dividing by zero.
+  func testContinueCalcSurvivesBadPace() {
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 0).bpm, 30)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: -5).bpm, 30)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 100_000).bpm, 240)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: .nan).bpm, 60)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: .infinity).bpm, 60)
+    for bpm in [0.0, -1, .nan, .infinity] { _ = ContinueCalc(target: 296_260, bpm: bpm).neededWhole }  // must not trap
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 30).neededWhole, ContinueCalc(target: 296_260, bpm: 0).neededWhole)
+  }
+
   func testCountdown() {
     // 0d 0h 2m 37s 13f wait, 10 s on the stopwatch, −27 frames correction.
     XCTAssertEqual(countdownSeconds(waitFrames: 4723, stopwatchSeconds: 10, correctionSeconds: -27 / 30.0),

@@ -141,10 +141,7 @@ private struct CounterSection: View {
       }
       HStack {
         Text("Pace")
-        TextField("BPM", value: $timers.bpm, format: .number.grouping(.never))
-          .multilineTextAlignment(.trailing)
-          .frame(width: 50)
-          .onSubmit { clampBpm() }
+        PaceField(timers: timers)
         Stepper("", value: $timers.bpm, in: SnipeMath.bpmRange, step: 5)
           .labelsHidden()
         Text("BPM").foregroundStyle(.secondary)
@@ -155,15 +152,33 @@ private struct CounterSection: View {
         }
       }
       .disabled(timers.counterRunning)
-      .onChange(of: timers.bpm) { clampBpm() }
-      Text("Continue presses per minute. The calculator above uses the same pace.")
+      Text("Continue presses per minute (\(SnipeMath.bpmRange.lowerBound)–\(SnipeMath.bpmRange.upperBound)). The calculator above uses the same pace.")
         .font(.caption).foregroundStyle(.secondary)
     }
   }
+}
 
-  func clampBpm() {
-    let r = SnipeMath.bpmRange
-    if !r.contains(timers.bpm) { timers.bpm = min(max(timers.bpm, r.lowerBound), r.upperBound) }
+/// Pace entry that only takes effect on Return or when you click away, so half-typed
+/// numbers (an empty box, or "9" on the way to "90") never reach the timer.
+private struct PaceField: View {
+  @ObservedObject var timers: SnipeTimers
+  @State private var text = ""
+  @FocusState private var focused: Bool
+
+  var body: some View {
+    TextField("BPM", text: $text)
+      .multilineTextAlignment(.trailing)
+      .frame(width: 50)
+      .focused($focused)
+      .onSubmit(commit)
+      .onChange(of: focused) { if !focused { commit() } }
+      .onChange(of: timers.bpm) { if !focused { text = String(timers.bpm) } }
+      .onAppear { text = String(timers.bpm) }
+  }
+
+  func commit() {
+    if let v = Int(text.trimmingCharacters(in: .whitespaces)) { timers.bpm = v }   // the model clamps it
+    text = String(timers.bpm)
   }
 }
 

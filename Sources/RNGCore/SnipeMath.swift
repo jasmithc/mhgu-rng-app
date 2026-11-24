@@ -49,10 +49,12 @@ public struct ContinueCalc: Sendable {
   /// Continue presses per minute.
   public var bpm: Double
 
+  /// `bpm` is kept within `SnipeMath.bpmRange`; a non-number falls back to the default.
   public init(target: Int, poogie: Bool = false, bpm: Double = SnipeMath.bpm) {
     self.target = target
     self.poogie = poogie
-    self.bpm = bpm
+    let r = SnipeMath.bpmRange
+    self.bpm = bpm.isFinite ? min(max(bpm, Double(r.lowerBound)), Double(r.upperBound)) : SnipeMath.bpm
   }
 
   public var advancesWithSpare: Double { Double(target - 3600) / 702 }
@@ -61,7 +63,8 @@ public struct ContinueCalc: Sendable {
   public var needed: Double { (Double(target - 3600) - framesAdvanced) / 702 }
   /// Rounded down so the cycles never overshoot the target, minus the Poogie allowance.
   public var neededWhole: Int {
-    max(0, Int(needed.rounded(.down)) - (poogie ? ContinueCalc.poogieCycles : 0))
+    guard needed.isFinite else { return 0 }
+    return max(0, Int(needed.rounded(.down)) - (poogie ? ContinueCalc.poogieCycles : 0))
   }
 }
 

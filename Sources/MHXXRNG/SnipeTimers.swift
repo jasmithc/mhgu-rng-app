@@ -30,6 +30,9 @@ final class SnipeTimers: ObservableObject {
   /// Continue presses per minute: the counter's beat, and the pace the calculator assumes.
   @Published var bpm: Int {
     didSet {
+      // Keep the pace in range (setting it here doesn't re-run didSet).
+      let r = SnipeMath.bpmRange
+      if !r.contains(bpm) { bpm = min(max(bpm, r.lowerBound), r.upperBound) }
       defaults.set(bpm, forKey: "timer.bpm")
       if !counterRunning { counterTarget = calc.neededWhole }
     }
