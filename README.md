@@ -90,6 +90,12 @@ swift build -c release && python3 tools/compare.py path/to/mhxx-rng.ipynb
 
 `compare.py` runs 28 cases through both implementations and checks that the output is identical.
 
+The app icon is generated from the pixel art in `Resources/AppIcon-source.png`. To change the art or the tile colour (`ice`, `slate` or `sand`), regenerate it with:
+
+```bash
+swift tools/make_icon.swift Resources/AppIcon-source.png Resources/AppIcon.icns ice
+```
+
 ## License
 
 MIT. See [LICENSE](LICENSE), which keeps the original mhxx-rng copyright notice.
