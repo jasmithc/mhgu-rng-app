@@ -15,6 +15,8 @@ This app is a Swift port of the RNG analysis tool from:
 
 For how charm generation and sniping work, step by step, read the guides in those repositories. Examples include [sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) and the [function reference](https://github.com/jasmithc/mhgu-rng/blob/main/docs/functions.md).
 
+New to charm sniping? [How to Charm Snipe in Monster Hunter Generations Ultimate!](https://www.youtube.com/watch?v=6aXJoX2hKOI) by Clobincole is a good video introduction to the process.
+
 ## Download
 
 1. Download `MHGU-Charms-RNG-<version>-macOS.zip` from the [latest release](https://github.com/jasmithc/mhgu-rng-app/releases/latest). It runs on Apple Silicon and Intel Macs with macOS 14 or later.
