@@ -84,7 +84,7 @@ Show or hide the panel with the timer button in the toolbar (⌥⌘T). Every con
     <img width="341" height="241" alt="Continue Cycles section: target frame 101840, Poogie ticked, 133.96 cycles needed, rounded down to 128" src="https://github.com/user-attachments/assets/cf91c224-25be-4aac-9f2a-3743e9cb4cec" />
   </p>
 
-- **Continue Counter** (⌥⌘C): beeps at your chosen pace, counting 1 → target, with a higher, longer beep on the last count. Set the pace under **Pace** (30–240 BPM, default 60); the Continue Cycles calculator uses the same pace. A faster pace means less waiting, so check that the game still counts every press: do a run at the new pace and confirm your position with Item Combo Search.
+- **Continue Counter** (⌥⌘C): beeps at your chosen pace, counting 1 → target, with a higher, longer beep on the last count. Set the pace under **Pace** (30–240 BPM, default 60); the Continue Cycles calculator uses the same pace. A faster pace means less waiting, but **90 BPM is the fastest that has proved reliable**: above that, the next screen sometimes hasn't finished loading when you press B, so the press is missed and the following A press confirms instead. The app shows a warning above 90. When trying a new pace, check that every press counted by confirming your position with Item Combo Search.
 
   <p align="center">
     <img width="341" height="107" alt="Continue Counter section showing 0 / 128, with the target and Start and Reset buttons" src="https://github.com/user-attachments/assets/71f99596-2f19-4527-9560-d73322ba83e9" />

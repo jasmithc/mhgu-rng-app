@@ -154,6 +154,13 @@ private struct CounterSection: View {
       .disabled(timers.counterRunning)
       Text("Continue presses per minute (\(SnipeMath.bpmRange.lowerBound)–\(SnipeMath.bpmRange.upperBound)). The calculator above uses the same pace.")
         .font(.caption).foregroundStyle(.secondary)
+      if timers.bpm > SnipeMath.reliableMaxBpm {
+        Label("Above \(SnipeMath.reliableMaxBpm) BPM the next screen may not finish loading in time: a B press can be missed and the following A press confirms instead.",
+              systemImage: "exclamationmark.triangle.fill")
+          .font(.caption)
+          .foregroundStyle(.orange)
+          .fixedSize(horizontal: false, vertical: true)
+      }
     }
   }
 }

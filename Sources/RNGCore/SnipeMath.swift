@@ -9,6 +9,9 @@ public enum SnipeMath {
   public static let bpm = 60.0
   /// Paces the timer accepts, in presses per minute.
   public static let bpmRange = 30...240
+  /// Fastest pace found to work reliably on Switch. Faster, the next screen may not finish
+  /// loading before the B press, which is then missed and the following A press confirms.
+  public static let reliableMaxBpm = 90
 
   /// Parse a wait time typed as `Xd Xh Xm Xs Xf` (any subset of the parts, in any order)
   /// or as a plain frame count. Returns the total in frames, or nil if it can't be read.
