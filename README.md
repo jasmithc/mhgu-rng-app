@@ -2,7 +2,8 @@
 
 A native macOS app for charm RNG sniping in Monster Hunter Generations Ultimate (MHXX). It finds the frame a charm appears on, converts it to a wait time, and includes timers for the continue-cycle and final countdown steps. No Python, Colab or Jupyter needed.
 
-<img width="3440" height="1440" alt="image" src="https://github.com/user-attachments/assets/f89cd441-0d06-493f-89c8-1bf9ed507546" />
+<img width="1548" height="1072" alt="image" src="https://github.com/user-attachments/assets/dc114ffd-dd62-433f-84da-308edae354e5" />
+
 
 
 ## Based on
