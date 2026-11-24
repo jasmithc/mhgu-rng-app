@@ -89,3 +89,18 @@ jobs:
           path: |
             dist/*.zip
             .build/windows-package/smoke/
+      - name: Print the smoke-test screenshots (base64 PNG)
+        if: always() && github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          foreach ($f in Get-ChildItem .build/windows-package/smoke/*.bmp -ErrorAction SilentlyContinue) {
+            $img = [System.Drawing.Image]::FromFile($f.FullName)
+            $png = "$($f.FullName).png"
+            $img.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
+            $img.Dispose()
+            $b = [Convert]::ToBase64String([IO.File]::ReadAllBytes($png))
+            Write-Host "BEGIN-PNG $($f.Name)"
+            for ($i = 0; $i -lt $b.Length; $i += 4000) { Write-Host $b.Substring($i, [Math]::Min(4000, $b.Length - $i)) }
+            Write-Host "END-PNG $($f.Name)"
+          }
