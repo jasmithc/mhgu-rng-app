@@ -20,8 +20,8 @@ jobs:
     name: macOS (engine + app)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: swift --version
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     container: swift:6.1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Python
         run: apt-get update -qq && apt-get install -y -qq python3 curl > /dev/null
       - run: swift --version
@@ -61,12 +61,12 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
-      - uses: compnerd/gha-setup-swift@main
+      - uses: actions/checkout@v7
+      - uses: compnerd/gha-setup-swift@v0.5.1
         with:
-          branch: swift-6.1-release
-          tag: 6.1-RELEASE
-      - uses: actions/setup-python@v5
+          swift-version: swift-6.1-release
+          swift-build: 6.1-RELEASE
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: swift --version

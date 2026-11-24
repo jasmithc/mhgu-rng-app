@@ -50,7 +50,7 @@ numba.typed = typed
 sys.modules.update({'numpy': np, 'numba': numba, 'numba.typed': typed})
 
 ns = {}
-cells = json.loads(NB.read_text())['cells']
+cells = json.loads(NB.read_text(encoding='utf-8'))['cells']
 exec(''.join(cells[0]['source']).split('set_en()')[0], ns)  # s, x..., options
 for c in cells[1:4]:
     exec(''.join(c['source']), ns)
