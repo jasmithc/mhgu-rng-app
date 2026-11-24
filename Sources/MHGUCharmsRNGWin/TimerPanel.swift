@@ -214,8 +214,10 @@ final class TimerPanel {
     }
     /// A label/value line.
     func result(_ name: String) {
-      moveWindow(l["\(name)Label"]!, x0, y, cw * 2 / 3, UI.px(18))
-      moveWindow(l[name]!, x0 + cw / 3, y, cw - cw / 3, UI.px(18))
+      // Label and value side by side, not overlapping (a static paints its whole rectangle).
+      let valueW = UI.px(112)
+      moveWindow(l["\(name)Label"]!, x0, y, cw - valueW - UI.px(4), UI.px(18))
+      moveWindow(l[name]!, x0 + cw - valueW, y, valueW, UI.px(18))
       y += UI.px(20)
     }
     /// Wrapping text; takes no space when empty.

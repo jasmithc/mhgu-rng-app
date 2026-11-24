@@ -10,7 +10,8 @@ let projectURL = "https://github.com/jasmithc/mhgu-rng-app"
 /// A row of the tool form: an optional label in the left column, then controls left to right.
 struct FormRow {
   var label: HWND?
-  /// Controls and their widths in 96-DPI units (0 = fill the rest of the row).
+  /// Controls and their widths in 96-DPI units (0 = fill the rest of the row; negative = up to
+  /// that width, shrinking to leave room for the controls after it).
   var items: [(HWND, Int)]
   var height = 23
   /// A wrapping text control whose row grows to fit its text (and disappears when empty).
@@ -294,9 +295,9 @@ final class App {
       FormRow(label: label("Presets", align: SS.right, visible: false), items: [(button("God charms ▾", id: ID.presets), 130)], height: 25),
       comboRow("Match", ID.searchMode, [("Exact", 0), ("At least", 1)], selected: 0),
       FormRow(label: label("First skill", align: SS.right, visible: false),
-              items: [(combo(id: ID.skill1), 260), (label("points", visible: false), 40), (edit("4", id: ID.points1, align: ES.right), 60)]),
+              items: [(combo(id: ID.skill1), -260), (label("points", visible: false), 40), (edit("4", id: ID.points1, align: ES.right), 60)]),
       FormRow(label: label("Second skill", align: SS.right, visible: false),
-              items: [(combo(id: ID.skill2), 260), (label("points", visible: false), 40), (edit("5", id: ID.points2, align: ES.right), 60)]),
+              items: [(combo(id: ID.skill2), -260), (label("points", visible: false), 40), (edit("5", id: ID.points2, align: ES.right), 60)]),
       comboRow("Slots", ID.searchSlots, slots0, selected: 3, width: 60),
       originRow(ID.searchOrigin),
     ] + rangeRows(ID.searchStart, ID.searchCount, count: 1_000_000) + [
@@ -336,7 +337,7 @@ final class App {
   }
 
   private func buildOutput() {
-    statusLabel = label("Ready")
+    statusLabel = label("Ready", align: SS.endEllipsis)
     textColors[Int(bitPattern: statusLabel)] = rgb(90, 90, 90)
     copyButton = button("Copy", id: ID.copy)
     clearButton = button("Clear", id: ID.clear)
@@ -392,8 +393,10 @@ final class App {
       }
       if let l = row.label { place(l, x0, y, labelW, rh) }
       var x = cx
-      for (h, w) in row.items {
-        let width = w == 0 ? max(x1 - x, UI.px(40)) : UI.px(w)
+      for (i, (h, w)) in row.items.enumerated() {
+        let rest = row.items[(i + 1)...].reduce(0) { $0 + UI.px(abs($1.1)) + UI.px(8) }
+        let width = w == 0 ? max(x1 - x, UI.px(40))
+          : (w < 0 ? max(min(UI.px(-w), x1 - x - rest), UI.px(120)) : UI.px(w))
         if row.wrapping { moveWindow(h, x, y, width, rh) } else { place(h, x, y, width, rh) }
         x += width + UI.px(8)
       }
@@ -402,7 +405,10 @@ final class App {
     y += UI.px(4)
     moveWindow(runButton, cx, y, UI.px(88), UI.px(27))
     moveWindow(stopButton, cx + UI.px(96), y, UI.px(88), UI.px(27))
-    place(runHint, cx + UI.px(196), y, max(x1 - cx - UI.px(196), 0), UI.px(27))
+    // The hint only shows when there's room for all of it.
+    let hintW = x1 - cx - UI.px(196)
+    show(runHint, hintW >= UI.px(180))
+    place(runHint, cx + UI.px(196), y, max(hintW, 0), UI.px(27))
     y += UI.px(27) + UI.px(16)
 
     // Output
