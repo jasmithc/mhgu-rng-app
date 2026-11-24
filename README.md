@@ -89,9 +89,12 @@ The app uses one name for each skill, whichever slot it's in. Two changes from m
 
 ## Development
 
-- `Sources/RNGCore`: Swift port of the original notebook's RNG and charm logic.
-- `Sources/MHXXRNG`: the SwiftUI app.
+Want to help, or build a Windows or Linux version? See [CONTRIBUTING.md](CONTRIBUTING.md). The engine already builds and passes its tests on macOS, Linux and Windows.
+
+- `Sources/RNGCore`: Swift port of the original notebook's RNG and charm logic, plus the snipe-timer maths. Cross-platform.
+- `Sources/MHXXRNG`: the SwiftUI app (macOS only).
 - `Sources/rngcheck`: command-line harness used by `tools/compare.py`.
+- `Tests/RNGCoreTests`: unit tests, run with `swift test`.
 
 `Sources/RNGCore/Tables.swift` (skill and charm tables) is generated from the original notebook. To regenerate it, or to check the Swift engine against the Python code, get `mhxx-rng.ipynb` from [jasmithc/mhgu-rng](https://github.com/jasmithc/mhgu-rng) and pass its path:
 

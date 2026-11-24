@@ -1,25 +1,7 @@
 import Foundation
 import RNGCore
 
-/// The Continue Cycle formula:
-///   (Target Frame − 3600) / 702                     = continue advances with 2 minutes to spare
-///   advances / 60 BPM                                = minutes to perform them
-///   minutes × 1800                                   = frames advanced meanwhile
-///   (Target Frame − 3600 − frames advanced) / 702    = continue advances needed
-struct ContinueCalc {
-  static let poogieCycles = 5
-  let target: Int
-  /// Poogie is in the room: do 5 fewer cycles, leaving time to remove it.
-  var poogie = false
-  var advancesWithSpare: Double { Double(target - 3600) / 702 }
-  var minutes: Double { advancesWithSpare / SnipeTimers.bpm }
-  var framesAdvanced: Double { minutes * 1800 }
-  var needed: Double { (Double(target - 3600) - framesAdvanced) / 702 }
-  /// Rounded down, so the cycles never overshoot the target.
-  var neededWhole: Int {
-    max(0, Int(needed.rounded(.down)) - (poogie ? ContinueCalc.poogieCycles : 0))
-  }
-}
+// ContinueCalc and the timing maths live in RNGCore (SnipeMath.swift) so other front ends can share them.
 
 enum CorrectionUnit: String, CaseIterable, Identifiable {
   case seconds = "seconds", frames = "frames"
@@ -28,8 +10,8 @@ enum CorrectionUnit: String, CaseIterable, Identifiable {
 
 @MainActor
 final class SnipeTimers: ObservableObject {
-  nonisolated static let bpm = 60.0
-  nonisolated static let fps = 30.0
+  nonisolated static let bpm = SnipeMath.bpm
+  nonisolated static let fps = SnipeMath.fps
   private let defaults = UserDefaults.standard
   private let clock = ContinuousClock()
 
@@ -167,7 +149,7 @@ final class SnipeTimers: ObservableObject {
   /// wait − stopwatch + correction, using the stopwatch's value at `t`.
   func plannedTotal(at t: ContinuousClock.Instant) -> Double? {
     guard let f = waitFrames else { return nil }
-    return Double(f) / SnipeTimers.fps - swElapsed(at: t) + correctionSeconds
+    return countdownSeconds(waitFrames: f, stopwatchSeconds: swElapsed(at: t), correctionSeconds: correctionSeconds)
   }
 
   func cdRemaining(at t: ContinuousClock.Instant) -> Double {
@@ -240,26 +222,8 @@ final class SnipeTimers: ObservableObject {
 
   // MARK: Parsing / formatting
 
-  static func parseWaitTime(_ text: String) -> Int? {
-    let s = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    if s.isEmpty { return nil }
-    if let n = Int(s) { return n }
-    let mult: [Character: Int] = ["d": 2_592_000, "h": 108_000, "m": 1800, "s": 30, "f": 1]
-    var total = 0
-    var seen = false
-    for token in s.split(whereSeparator: { $0.isWhitespace }) {
-      guard let unit = token.last, let m = mult[unit], let v = Int(token.dropLast()) else { return nil }
-      total += v * m
-      seen = true
-    }
-    return seen ? total : nil
-  }
+  static func parseWaitTime(_ text: String) -> Int? { SnipeMath.parseWaitTime(text) }
 
   /// h:mm:ss.cc (with a leading "−" for negative values).
-  static func clockString(_ seconds: Double) -> String {
-    let neg = seconds < 0
-    let cs = Int((abs(seconds) * 100).rounded(.down))
-    let h = cs / 360_000, m = (cs / 6000) % 60, s = (cs / 100) % 60, c = cs % 100
-    return (neg ? "−" : "") + String(format: "%d:%02d:%02d.%02d", h, m, s, c)
-  }
+  static func clockString(_ seconds: Double) -> String { SnipeMath.clockString(seconds) }
 }

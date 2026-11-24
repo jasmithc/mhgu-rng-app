@@ -1,0 +1,80 @@
+# Builds and tests the shared engine (RNGCore + rngcheck) on macOS, Linux and Windows,
+# builds the macOS app on macOS, and checks the engine against the original Python
+# notebook from jasmithc/mhgu-rng with tools/compare.py.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NOTEBOOK_URL: https://raw.githubusercontent.com/jasmithc/mhgu-rng/main/mhxx-rng.ipynb
+
+jobs:
+  macos:
+    name: macOS (engine + app)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: swift --version
+      - name: Build (engine, rngcheck and the macOS app)
+        run: swift build -c release
+      - name: Unit tests
+        run: swift test
+      - name: Compare with the Python notebook
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/mhxx-rng.ipynb" "$NOTEBOOK_URL"
+          python tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
+      - name: Build the .app bundle
+        run: ./build_app.sh
+
+  linux:
+    name: Linux (engine)
+    runs-on: ubuntu-latest
+    container: swift:6.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Python
+        run: apt-get update -qq && apt-get install -y -qq python3 curl > /dev/null
+      - run: swift --version
+      - name: Build (engine and rngcheck)
+        run: swift build -c release
+      - name: Unit tests
+        run: swift test
+      - name: Compare with the Python notebook
+        run: |
+          curl -sSfL -o /tmp/mhxx-rng.ipynb "$NOTEBOOK_URL"
+          python3 tools/compare.py /tmp/mhxx-rng.ipynb
+
+  windows:
+    name: Windows (engine)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: compnerd/gha-setup-swift@main
+        with:
+          branch: swift-6.1-release
+          tag: 6.1-RELEASE
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: swift --version
+      - name: Build (engine and rngcheck)
+        run: swift build -c release
+      - name: Unit tests
+        run: swift test
+      - name: Compare with the Python notebook
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/mhxx-rng.ipynb" "$NOTEBOOK_URL"
+          python tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
