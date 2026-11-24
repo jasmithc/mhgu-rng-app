@@ -66,7 +66,7 @@ The toolbar picks the charm kind (Enduring, Timeworn, Shining or Mystery) and th
 Show or hide the panel with the timer button in the toolbar (⌥⌘T). Every control is also in the **Timer** menu. The timers keep running when the panel is hidden, and the Mac stays awake while the counter or countdown runs.
 
 - **Continue Cycles**: enter the target frame, or turn on *Set Continue Cycles target to the frame found* in Charm Search to fill it in from the first result. It calculates:
-  - `(T − 3600) / 700` advances with 2 minutes to spare
+  - `(T − 3600) / 702` advances with 2 minutes to spare
   - the time those take at 60 BPM
   - the frames advanced meanwhile (`minutes × 1800`)
   - the cycles needed, `(T − 3600 − frames advanced) / 702`

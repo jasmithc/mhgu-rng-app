@@ -2,7 +2,7 @@ import Foundation
 import RNGCore
 
 /// The Continue Cycle formula:
-///   (Target Frame − 3600) / 700                     = continue advances with 2 minutes to spare
+///   (Target Frame − 3600) / 702                     = continue advances with 2 minutes to spare
 ///   advances / 60 BPM                                = minutes to perform them
 ///   minutes × 1800                                   = frames advanced meanwhile
 ///   (Target Frame − 3600 − frames advanced) / 702    = continue advances needed
@@ -11,7 +11,7 @@ struct ContinueCalc {
   let target: Int
   /// Poogie is in the room: do 5 fewer cycles, leaving time to remove it.
   var poogie = false
-  var advancesWithSpare: Double { Double(target - 3600) / 700 }
+  var advancesWithSpare: Double { Double(target - 3600) / 702 }
   var minutes: Double { advancesWithSpare / SnipeTimers.bpm }
   var framesAdvanced: Double { minutes * 1800 }
   var needed: Double { (Double(target - 3600) - framesAdvanced) / 702 }
