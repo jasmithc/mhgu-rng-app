@@ -5,8 +5,10 @@
 public enum SnipeMath {
   /// The game runs at 30 frames per second.
   public static let fps = 30.0
-  /// Continue cycles are paced at 60 beats per minute.
+  /// Default pace for continue cycles, in presses per minute.
   public static let bpm = 60.0
+  /// Paces the timer accepts, in presses per minute.
+  public static let bpmRange = 30...240
 
   /// Parse a wait time typed as `Xd Xh Xm Xs Xf` (any subset of the parts, in any order)
   /// or as a plain frame count. Returns the total in frames, or nil if it can't be read.
@@ -35,7 +37,7 @@ public enum SnipeMath {
 
 /// The Continue Cycle formula:
 ///   (Target Frame − 3600) / 702                     = continue advances with 2 minutes to spare
-///   advances / 60 BPM                                = minutes to perform them
+///   advances / BPM (60 by default)                   = minutes to perform them
 ///   minutes × 1800                                   = frames advanced meanwhile
 ///   (Target Frame − 3600 − frames advanced) / 702    = continue advances needed
 public struct ContinueCalc: Sendable {
@@ -44,19 +46,25 @@ public struct ContinueCalc: Sendable {
 
   public let target: Int
   public var poogie: Bool
+  /// Continue presses per minute.
+  public var bpm: Double
 
-  public init(target: Int, poogie: Bool = false) {
+  /// `bpm` is kept within `SnipeMath.bpmRange`; a non-number falls back to the default.
+  public init(target: Int, poogie: Bool = false, bpm: Double = SnipeMath.bpm) {
     self.target = target
     self.poogie = poogie
+    let r = SnipeMath.bpmRange
+    self.bpm = bpm.isFinite ? min(max(bpm, Double(r.lowerBound)), Double(r.upperBound)) : SnipeMath.bpm
   }
 
   public var advancesWithSpare: Double { Double(target - 3600) / 702 }
-  public var minutes: Double { advancesWithSpare / SnipeMath.bpm }
+  public var minutes: Double { advancesWithSpare / bpm }
   public var framesAdvanced: Double { minutes * 1800 }
   public var needed: Double { (Double(target - 3600) - framesAdvanced) / 702 }
   /// Rounded down so the cycles never overshoot the target, minus the Poogie allowance.
   public var neededWhole: Int {
-    max(0, Int(needed.rounded(.down)) - (poogie ? ContinueCalc.poogieCycles : 0))
+    guard needed.isFinite else { return 0 }
+    return max(0, Int(needed.rounded(.down)) - (poogie ? ContinueCalc.poogieCycles : 0))
   }
 }
 

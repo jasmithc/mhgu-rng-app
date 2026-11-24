@@ -128,6 +128,25 @@ struct ToolForm: View {
   @ViewBuilder var fields: some View {
     switch tool {
     case .search:
+      LabeledContent("Presets") {
+        Menu {
+          ForEach(PresetSection.allCases, id: \.self) { section in
+            Section(section.rawValue) {
+              ForEach(CharmPresets.groups.filter { $0.section == section }, id: \.name) { group in
+                Menu(group.name) {
+                  ForEach(group.presets, id: \.self) { p in
+                    Button(p.label(state.lang)) { state.applyPreset(p) }
+                  }
+                }
+              }
+            }
+          }
+        } label: {
+          Label("God charms", systemImage: "star")
+        }
+        .fixedSize()
+        .help("Fill in the search with a top charm for your weapon")
+      }
       Picker("Match", selection: $state.search.mode) {
         ForEach(SearchMode.allCases) { Text($0.rawValue).tag($0) }
       }
@@ -143,6 +162,14 @@ struct ToolForm: View {
       SlotsPicker(value: $state.search.slots, allowZero: true)
       OriginPicker(value: $state.search.origin)
       FrameRange(start: $state.search.start, count: $state.search.count)
+      if let problem = state.searchProblem {
+        LabeledContent("") {
+          Label(problem, systemImage: "exclamationmark.triangle.fill")
+            .foregroundStyle(.orange)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 440, alignment: .leading)
+        }
+      }
       Toggle("Set Continue Cycles target to the frame found", isOn: $state.sendFoundToCalc)
         .help("After a search, copy the first frame found into the timer panel's Continue Cycles calculator.")
     case .around:
@@ -210,6 +237,12 @@ struct ToolForm: View {
       }
       if f.skill1 == nil && f.skill2 == nil {
         state.status = "Pick at least one skill."; return
+      }
+      if let problem = state.searchProblem {
+        // Don't search for a charm that can't exist; explain why instead.
+        state.output = OutputRenderer.render({ let o = Output(); o.print("Not searched: this charm can't exist."); o.print(problem); return o }())
+        state.status = "Not searched: this charm can't exist"
+        return
       }
       state.run("search") { e in
         let p = try e.parameter(skill1: f.skill1, points1: f.points1, skill2: f.skill2,

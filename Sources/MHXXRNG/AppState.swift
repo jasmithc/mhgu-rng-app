@@ -138,6 +138,30 @@ final class AppState: ObservableObject {
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
   }
 
+  /// Why the current Charm Search target can't exist, or nil if it can.
+  var searchProblem: String? {
+    let f = search
+    if f.skill1 == nil && f.skill2 == nil { return nil }   // handled when running
+    return tables.impossibleReason(skill1: f.skill1, points1: f.points1, skill2: f.skill2, points2: f.points2,
+                                   slots: f.slots, origin: f.origin, atLeast: f.mode == .atLeast, lang: lang)
+  }
+
+  /// Fill in Charm Search from a preset: charm kind, skills, points and slots, as an exact
+  /// melding search.
+  func applyPreset(_ p: CharmPreset) {
+    kind = p.kind
+    search.mode = .exact
+    search.origin = .melding
+    search.skill1 = p.skill1
+    search.points1 = p.points1
+    search.skill2 = p.skill2
+    search.points2 = p.points2
+    search.slots = p.slots
+    // Top charms are rare (often tens of millions of frames away), so search far enough to find them.
+    search.count = max(search.count, 100_000_000)
+    status = "Preset: \(p.label(lang)) (\(kindName(p.kind)))"
+  }
+
   /// Clear skill choices that the newly selected charm kind can't roll.
   func kindChanged() {
     if let s = search.skill1, !tables.skill1.contains(s) { search.skill1 = nil }

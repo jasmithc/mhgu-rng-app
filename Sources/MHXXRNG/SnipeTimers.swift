@@ -10,7 +10,6 @@ enum CorrectionUnit: String, CaseIterable, Identifiable {
 
 @MainActor
 final class SnipeTimers: ObservableObject {
-  nonisolated static let bpm = SnipeMath.bpm
   nonisolated static let fps = SnipeMath.fps
   private let defaults = UserDefaults.standard
   private let clock = ContinuousClock()
@@ -28,11 +27,38 @@ final class SnipeTimers: ObservableObject {
       if !counterRunning { counterTarget = calc.neededWhole }
     }
   }
-  var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie) }
+  /// Continue presses per minute: the counter's beat, and the pace the calculator assumes.
+  @Published var bpm: Int {
+    didSet {
+      // Keep the pace in range (setting it here doesn't re-run didSet).
+      let r = SnipeMath.bpmRange
+      if !r.contains(bpm) { bpm = min(max(bpm, r.lowerBound), r.upperBound) }
+      if Int(paceText.trimmingCharacters(in: .whitespaces)) != bpm { paceText = String(bpm) }
+      defaults.set(bpm, forKey: "timer.bpm")
+      if !counterRunning { counterTarget = calc.neededWhole }
+    }
+  }
+  /// What's typed in the Pace box. Valid paces apply as you type; anything else waits for
+  /// Return, leaving the box, or Start (see `commitPaceText`).
+  @Published var paceText: String = ""
 
-  // MARK: Continue counter (60 BPM metronome)
+  func paceTextChanged() {
+    if let v = Int(paceText.trimmingCharacters(in: .whitespaces)), SnipeMath.bpmRange.contains(v), v != bpm { bpm = v }
+  }
+
+  /// Apply whatever is in the Pace box (kept within range), then show the pace in use.
+  func commitPaceText() {
+    if let v = Int(paceText.trimmingCharacters(in: .whitespaces)) { bpm = v }
+    paceText = String(bpm)
+  }
+
+  var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie, bpm: Double(bpm)) }
+
+  // MARK: Continue counter (metronome at `bpm`)
   @Published var counterTarget: Int
   @Published private(set) var counterStart: ContinuousClock.Instant?
+  /// The pace the running counter was started with: the count and the beeps both use it.
+  private(set) var counterBpm: Int = Int(SnipeMath.bpm)
   @Published private(set) var counterRunning = false
   @Published private(set) var counterFinished = false
   private let counterBeeps = BeepScheduler()
@@ -62,7 +88,11 @@ final class SnipeTimers: ObservableObject {
     calcTarget = t
     let pg = defaults.bool(forKey: "timer.poogie")
     poogie = pg
-    counterTarget = ContinueCalc(target: t, poogie: pg).neededWhole
+    let savedBpm = defaults.object(forKey: "timer.bpm") as? Int ?? Int(SnipeMath.bpm)
+    let pace = min(max(savedBpm, SnipeMath.bpmRange.lowerBound), SnipeMath.bpmRange.upperBound)
+    bpm = pace
+    paceText = String(pace)
+    counterTarget = ContinueCalc(target: t, poogie: pg, bpm: Double(pace)).neededWhole
     waitText = defaults.string(forKey: "timer.waitText") ?? "0d 0h 2m 37s 13f"
     correction = defaults.object(forKey: "timer.correction") as? Double ?? 0
     correctionUnit = CorrectionUnit(rawValue: defaults.string(forKey: "timer.correctionUnit") ?? "") ?? .seconds
@@ -78,13 +108,15 @@ final class SnipeTimers: ObservableObject {
     if counterFinished { return counterTarget }
     guard let s = counterStart else { return 0 }
     let elapsed = (t - s).seconds
-    return min(counterTarget, Int((elapsed * SnipeTimers.bpm / 60).rounded(.down)) + 1)
+    return min(counterTarget, Int((elapsed * Double(counterBpm) / 60).rounded(.down)) + 1)
   }
 
   func startCounter() {
+    commitPaceText()   // a pace still being typed applies before the beat is scheduled
     guard counterTarget > 0 else { return }
+    counterBpm = bpm
     let start = clock.now + .milliseconds(150)  // let the audio engine settle before beat 1
-    let period = 60 / SnipeTimers.bpm
+    let period = 60 / Double(counterBpm)
     let events = (0..<counterTarget).map { n in
       BeepScheduler.Event(at: start + .nanoseconds(Int64(Double(n) * period * 1e9)),
                           beep: n == counterTarget - 1 ? .beatFinal : .beat)

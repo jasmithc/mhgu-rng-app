@@ -101,6 +101,87 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertEqual(Engine.twoDecimals(0.004), "0.00")
   }
 
+  // MARK: Charm presets
+
+  func testEveryPresetCanExist() {
+    for group in CharmPresets.groups {
+      XCTAssertFalse(group.presets.isEmpty, group.name)
+      for p in group.presets {
+        let t = charmKindTables[p.kind.rawValue]
+        XCTAssertTrue(t.canRoll(skill1: p.skill1, points1: p.points1, skill2: p.skill2, points2: p.points2, slots: p.slots),
+                      "\(group.name): \(p.label(languageTables[.en]!)) can't exist")
+      }
+    }
+  }
+
+  func testPresetLabelsAndElements() {
+    let en = languageTables[.en]!
+    let general = CharmPresets.groups.first { $0.name == "General Blademaster" }!
+    XCTAssertEqual(general.presets.first?.label(en), "Tenderizer +6 / Expert +10 ◯◯◯")
+    let sns = CharmPresets.groups.first { $0.name == "Sword & Shield / Dual Blades" }!.presets.map { $0.label(en) }
+    for element in ["Fire Atk", "Water Atk", "Thunder Atk", "Ice Atk", "Dragon Atk"] {
+      XCTAssertTrue(sns.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)
+    }
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
+    let bow = CharmPresets.groups.first { $0.name == "Bow" }!.presets.map { $0.label(en) }
+    XCTAssertTrue(bow.contains("Expert +4 / Power C+ +12 ◯ (Shining Charm)"))
+    XCTAssertTrue(bow.contains("Expert +3 / Power C+ +11 ◯◯ (Shining Charm)"))
+  }
+
+  func testCanRollRejectsImpossibleCharms() {
+    let t = charmKindTables[CharmKind.enduring.rawValue]
+    XCTAssertTrue(t.canRoll(skill1: tenderizer, points1: 6, skill2: expert, points2: 10, slots: 3))
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 7, skill2: expert, points2: 10, slots: 3))  // over max
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 6, skill2: expert, points2: 11, slots: 3))
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 6, skill2: tenderizer, points2: 5, slots: 3)) // same skill
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 1, skill2: expert, points2: 1, slots: 3))  // below Tenderizer's minimum of 2
+    // Slot limits: a low-point Mystery charm (Paralysis +1 / Poison +1) can have 1 slot but not 2.
+    let mystery = charmKindTables[CharmKind.mystery.rawValue]
+    XCTAssertTrue(mystery.canRoll(skill1: 1, points1: 1, skill2: 0, points2: 1, slots: 1))
+    XCTAssertFalse(mystery.canRoll(skill1: 1, points1: 1, skill2: 0, points2: 1, slots: 2))
+  }
+
+  // MARK: Can the charm exist?
+
+  func reason(_ kind: CharmKind, _ a: Int?, _ pa: Int, _ b: Int?, _ pb: Int, slots: Int,
+              origin: Origin = .melding, atLeast: Bool = false) -> String? {
+    charmKindTables[kind.rawValue].impossibleReason(skill1: a, points1: pa, skill2: b, points2: pb, slots: slots,
+                                                    origin: origin, atLeast: atLeast, lang: languageTables[.en]!)
+  }
+
+  func testPossibleCharmsPass() {
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, 10, slots: 3))
+    XCTAssertNil(reason(.enduring, crisis, 4, recLevel, 2, slots: 0))
+    XCTAssertNil(reason(.enduring, chainCrit, 4, nil, 0, slots: 3))
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, -3, slots: 0, origin: .quest))  // quests can give negative points
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, 10, slots: 3, atLeast: true))
+    XCTAssertNil(reason(.enduring, nil, 0, expert, 10, slots: 3, atLeast: true))
+  }
+
+  func testImpossibleCharmsExplainWhy() {
+    XCTAssertEqual(reason(.enduring, tenderizer, 7, expert, 10, slots: 3),
+                   "On Enduring Charms, Tenderizer in slot 1 ranges from +2 to +6.")
+    XCTAssertEqual(reason(.enduring, expert, 10, tenderizer, 5, slots: 3),
+                   "Expert can't be the first skill on Enduring Charms.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 6, expert, 11, slots: 3),
+                   "On Enduring Charms from melding, Expert in slot 2 ranges from +1 to +10.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 6, expert, -3, slots: 0),
+                   "On Enduring Charms from melding, Expert in slot 2 ranges from +1 to +10.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 7, nil, 0, slots: 0, atLeast: true),
+                   "On Enduring Charms, Tenderizer in slot 1 ranges from +2 to +6.")
+  }
+
+  func testSlotLimits() {
+    // Paralysis (1) / Poison (0) on Mystery charms.
+    XCTAssertEqual(reason(.mystery, 1, 1, 0, 1, slots: 2),
+                   "Mystery Charms like this can have 0 or 1 slots with these points, not 2.")
+    // More points can mean fewer slots on Mystery charms, so "at least" checks every total.
+    XCTAssertNil(reason(.mystery, 1, 1, 0, 1, slots: 1, atLeast: true))
+    XCTAssertEqual(reason(.mystery, 1, 5, 0, 7, slots: 1, atLeast: true),
+                   "Mystery Charms like this can have 0 slots with at least these points, not 1 or more.")
+  }
+
   // MARK: RNG jump
 
   /// jump(n) uses polynomial arithmetic; it must agree with stepping the RNG one frame at a time.
@@ -156,6 +237,27 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertEqual(ContinueCalc(target: 296_260, poogie: true).neededWhole, 394)
     XCTAssertEqual(ContinueCalc(target: 101_840).advancesWithSpare, 139.94, accuracy: 0.005)
     XCTAssertEqual(ContinueCalc(target: 3000).neededWhole, 0)
+  }
+
+  func testContinueCalcPace() {
+    // Faster pace: less real time passes during the cycles, so slightly more cycles are needed.
+    XCTAssertEqual(ContinueCalc(target: 296_260).bpm, 60)
+    let fast = ContinueCalc(target: 296_260, bpm: 90)
+    XCTAssertEqual(fast.minutes, (296_260 - 3600) / 702.0 / 90, accuracy: 1e-9)
+    XCTAssertEqual(fast.neededWhole, 405)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 120).neededWhole, 407)
+    XCTAssertEqual(ContinueCalc(target: 296_260, poogie: true, bpm: 90).neededWhole, 400)
+  }
+
+  /// A half-typed pace (0, empty, absurd) once crashed the app by dividing by zero.
+  func testContinueCalcSurvivesBadPace() {
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 0).bpm, 30)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: -5).bpm, 30)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 100_000).bpm, 240)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: .nan).bpm, 60)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: .infinity).bpm, 60)
+    for bpm in [0.0, -1, .nan, .infinity] { _ = ContinueCalc(target: 296_260, bpm: bpm).neededWhole }  // must not trap
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 30).neededWhole, ContinueCalc(target: 296_260, bpm: 0).neededWhole)
   }
 
   func testCountdown() {
