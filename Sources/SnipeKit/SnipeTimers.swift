@@ -1,34 +1,37 @@
 import Foundation
+#if os(iOS)
+import UIKit
+#endif
 import RNGCore
 
 // ContinueCalc and the timing maths live in RNGCore (SnipeMath.swift) so other front ends can share them.
 
-enum CorrectionUnit: String, CaseIterable, Identifiable {
+public enum CorrectionUnit: String, CaseIterable, Identifiable {
   case seconds = "seconds", frames = "frames"
-  var id: String { rawValue }
+  public var id: String { rawValue }
 }
 
 @MainActor
-final class SnipeTimers: ObservableObject {
-  nonisolated static let fps = SnipeMath.fps
+public final class SnipeTimers: ObservableObject {
+  public nonisolated static let fps = SnipeMath.fps
   private let defaults = UserDefaults.standard
   private let clock = ContinuousClock()
 
   // MARK: Calculator
-  @Published var calcTarget: Int {
+  @Published public var calcTarget: Int {
     didSet {
       defaults.set(calcTarget, forKey: "timer.calcTarget")
       if !counterRunning { counterTarget = calc.neededWhole }
     }
   }
-  @Published var poogie: Bool {
+  @Published public var poogie: Bool {
     didSet {
       defaults.set(poogie, forKey: "timer.poogie")
       if !counterRunning { counterTarget = calc.neededWhole }
     }
   }
   /// Continue presses per minute: the counter's beat, and the pace the calculator assumes.
-  @Published var bpm: Int {
+  @Published public var bpm: Int {
     didSet {
       // Keep the pace in range (setting it here doesn't re-run didSet).
       let r = SnipeMath.bpmRange
@@ -40,50 +43,50 @@ final class SnipeTimers: ObservableObject {
   }
   /// What's typed in the Pace box. Valid paces apply as you type; anything else waits for
   /// Return, leaving the box, or Start (see `commitPaceText`).
-  @Published var paceText: String = ""
+  @Published public var paceText: String = ""
 
-  func paceTextChanged() {
+  public func paceTextChanged() {
     if let v = Int(paceText.trimmingCharacters(in: .whitespaces)), SnipeMath.bpmRange.contains(v), v != bpm { bpm = v }
   }
 
   /// Apply whatever is in the Pace box (kept within range), then show the pace in use.
-  func commitPaceText() {
+  public func commitPaceText() {
     if let v = Int(paceText.trimmingCharacters(in: .whitespaces)) { bpm = v }
     paceText = String(bpm)
   }
 
-  var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie, bpm: Double(bpm)) }
+  public var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie, bpm: Double(bpm)) }
 
   // MARK: Continue counter (metronome at `bpm`)
-  @Published var counterTarget: Int
-  @Published private(set) var counterStart: ContinuousClock.Instant?
+  @Published public var counterTarget: Int
+  @Published public private(set) var counterStart: ContinuousClock.Instant?
   /// The pace the running counter was started with: the count and the beeps both use it.
-  private(set) var counterBpm: Int = Int(SnipeMath.bpm)
-  @Published private(set) var counterRunning = false
-  @Published private(set) var counterFinished = false
+  public private(set) var counterBpm: Int = Int(SnipeMath.bpm)
+  @Published public private(set) var counterRunning = false
+  @Published public private(set) var counterFinished = false
   private let counterBeeps = BeepScheduler()
 
   // MARK: Stopwatch
-  @Published private(set) var swStart: ContinuousClock.Instant?
-  @Published private(set) var swAccumulated: Double = 0
+  @Published public private(set) var swStart: ContinuousClock.Instant?
+  @Published public private(set) var swAccumulated: Double = 0
 
   // MARK: Countdown
-  @Published var waitText: String { didSet { defaults.set(waitText, forKey: "timer.waitText") } }
-  @Published var correction: Double { didSet { defaults.set(correction, forKey: "timer.correction") } }
-  @Published var correctionUnit: CorrectionUnit {
+  @Published public var waitText: String { didSet { defaults.set(waitText, forKey: "timer.waitText") } }
+  @Published public var correction: Double { didSet { defaults.set(correction, forKey: "timer.correction") } }
+  @Published public var correctionUnit: CorrectionUnit {
     didSet { defaults.set(correctionUnit.rawValue, forKey: "timer.correctionUnit") }
   }
-  @Published private(set) var cdEnd: ContinuousClock.Instant?
-  @Published private(set) var cdTotal: Double = 0
-  @Published private(set) var cdUsedStopwatch: Double = 0
-  @Published private(set) var cdRunning = false
-  @Published private(set) var cdFinished = false
-  @Published var cdError: String?
+  @Published public private(set) var cdEnd: ContinuousClock.Instant?
+  @Published public private(set) var cdTotal: Double = 0
+  @Published public private(set) var cdUsedStopwatch: Double = 0
+  @Published public private(set) var cdRunning = false
+  @Published public private(set) var cdFinished = false
+  @Published public var cdError: String?
   private let countdownBeeps = BeepScheduler()
 
   private var activity: NSObjectProtocol?
 
-  init() {
+  public init() {
     let t = defaults.object(forKey: "timer.calcTarget") as? Int ?? 300_000
     calcTarget = t
     let pg = defaults.bool(forKey: "timer.poogie")
@@ -100,18 +103,18 @@ final class SnipeTimers: ObservableObject {
     DispatchQueue.global(qos: .userInitiated).async { SoundPlayer.shared.prepare() }
   }
 
-  var now: ContinuousClock.Instant { clock.now }
+  public var now: ContinuousClock.Instant { clock.now }
 
   // MARK: Counter
 
-  func counterValue(at t: ContinuousClock.Instant) -> Int {
+  public func counterValue(at t: ContinuousClock.Instant) -> Int {
     if counterFinished { return counterTarget }
     guard let s = counterStart else { return 0 }
     let elapsed = (t - s).seconds
     return min(counterTarget, Int((elapsed * Double(counterBpm) / 60).rounded(.down)) + 1)
   }
 
-  func startCounter() {
+  public func startCounter() {
     commitPaceText()   // a pace still being typed applies before the beat is scheduled
     guard counterTarget > 0 else { return }
     counterBpm = bpm
@@ -135,13 +138,13 @@ final class SnipeTimers: ObservableObject {
     updateActivity()
   }
 
-  func stopCounter() {
+  public func stopCounter() {
     counterBeeps.cancel()
     counterRunning = false
     updateActivity()
   }
 
-  func resetCounter() {
+  public func resetCounter() {
     stopCounter()
     counterStart = nil
     counterFinished = false
@@ -149,13 +152,13 @@ final class SnipeTimers: ObservableObject {
 
   // MARK: Stopwatch
 
-  var swRunning: Bool { swStart != nil }
+  public var swRunning: Bool { swStart != nil }
 
-  func swElapsed(at t: ContinuousClock.Instant) -> Double {
+  public func swElapsed(at t: ContinuousClock.Instant) -> Double {
     swAccumulated + (swStart.map { (t - $0).seconds } ?? 0)
   }
 
-  func toggleStopwatch() {
+  public func toggleStopwatch() {
     if let s = swStart {
       swAccumulated += (clock.now - s).seconds
       swStart = nil
@@ -164,7 +167,7 @@ final class SnipeTimers: ObservableObject {
     }
   }
 
-  func resetStopwatch() {
+  public func resetStopwatch() {
     swStart = nil
     swAccumulated = 0
   }
@@ -172,25 +175,25 @@ final class SnipeTimers: ObservableObject {
   // MARK: Countdown
 
   /// Frames parsed from the wait-time box: "Xd Xh Xm Xs Xf" (any parts) or a plain frame count.
-  var waitFrames: Int? { SnipeTimers.parseWaitTime(waitText) }
+  public var waitFrames: Int? { SnipeTimers.parseWaitTime(waitText) }
 
-  var correctionSeconds: Double {
+  public var correctionSeconds: Double {
     correctionUnit == .frames ? correction / SnipeTimers.fps : correction
   }
 
   /// wait − stopwatch + correction, using the stopwatch's value at `t`.
-  func plannedTotal(at t: ContinuousClock.Instant) -> Double? {
+  public func plannedTotal(at t: ContinuousClock.Instant) -> Double? {
     guard let f = waitFrames else { return nil }
     return countdownSeconds(waitFrames: f, stopwatchSeconds: swElapsed(at: t), correctionSeconds: correctionSeconds)
   }
 
-  func cdRemaining(at t: ContinuousClock.Instant) -> Double {
+  public func cdRemaining(at t: ContinuousClock.Instant) -> Double {
     if cdFinished { return 0 }
     guard let end = cdEnd else { return plannedTotal(at: t) ?? 0 }
     return max(0, (end - t).seconds)
   }
 
-  func startCountdown() {
+  public func startCountdown() {
     cdError = nil
     let t = clock.now
     guard waitFrames != nil else {
@@ -226,7 +229,7 @@ final class SnipeTimers: ObservableObject {
     updateActivity()
   }
 
-  func cancelCountdown() {
+  public func cancelCountdown() {
     countdownBeeps.cancel()
     cdRunning = false
     cdEnd = nil
@@ -235,13 +238,17 @@ final class SnipeTimers: ObservableObject {
   }
 
   /// Fill in the wait time from a frame count (used by the Frame → Wait Time tool).
-  func setWaitFrames(_ frames: Int) {
+  public func setWaitFrames(_ frames: Int) {
     waitText = frameTime(frames)
   }
 
   /// Keep the Mac (and its display) awake while the metronome or countdown is running.
   private func updateActivity() {
     let busy = counterRunning || cdRunning
+    #if os(iOS)
+    // Don't let the phone auto-lock while the counter or countdown is running.
+    UIApplication.shared.isIdleTimerDisabled = busy
+    #endif
     if busy && activity == nil {
       activity = ProcessInfo.processInfo.beginActivity(
         options: [.userInitiated, .idleSystemSleepDisabled, .idleDisplaySleepDisabled],
@@ -254,8 +261,8 @@ final class SnipeTimers: ObservableObject {
 
   // MARK: Parsing / formatting
 
-  static func parseWaitTime(_ text: String) -> Int? { SnipeMath.parseWaitTime(text) }
+  public static func parseWaitTime(_ text: String) -> Int? { SnipeMath.parseWaitTime(text) }
 
   /// h:mm:ss.cc (with a leading "−" for negative values).
-  static func clockString(_ seconds: Double) -> String { SnipeMath.clockString(seconds) }
+  public static func clockString(_ seconds: Double) -> String { SnipeMath.clockString(seconds) }
 }

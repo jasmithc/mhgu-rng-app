@@ -2,10 +2,12 @@ import RNGCore
 import SwiftUI
 
 /// Right-side panel: continue-cycle calculator, continue counter (metronome), stopwatch, final countdown.
-struct TimerPanel: View {
+public struct TimerPanel: View {
   @ObservedObject var timers: SnipeTimers
 
-  var body: some View {
+  public init(timers: SnipeTimers) { self.timers = timers }
+
+  public var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 14) {
         CalculatorSection(timers: timers)
@@ -65,7 +67,28 @@ private struct BigReadout: View {
 private func intField(_ title: String, _ value: Binding<Int>) -> some View {
   TextField(title, value: value, format: .number.grouping(.never))
     .multilineTextAlignment(.trailing)
-    .frame(width: 140)
+    .frame(minWidth: 70, maxWidth: 140)   // shrinks on a phone so the buttons beside it fit
+    .numberKeyboard()
+}
+
+extension View {
+  /// Link-looking button: `.link` on the Mac, a plain borderless button on iPhone/iPad.
+  @ViewBuilder func linkButtonStyle() -> some View {
+    #if os(macOS)
+    self.buttonStyle(.link)
+    #else
+    self.buttonStyle(.borderless)
+    #endif
+  }
+
+  /// A number pad on iPhone/iPad; no effect on the Mac.
+  func numberKeyboard(allowMinus: Bool = false) -> some View {
+    #if os(iOS)
+    return self.keyboardType(allowMinus ? .numbersAndPunctuation : .numberPad)
+    #else
+    return self
+    #endif
+  }
 }
 
 // MARK: - Calculator
@@ -131,13 +154,14 @@ private struct CounterSection: View {
         intField("Target", $timers.counterTarget).disabled(timers.counterRunning)
         Spacer()
         if timers.counterRunning {
-          Button("Stop") { timers.stopCounter() }
+          Button("Stop") { timers.stopCounter() }.fixedSize()
         } else {
           Button("Start") { timers.startCounter() }
             .buttonStyle(.borderedProminent)
             .disabled(timers.counterTarget <= 0)
+            .fixedSize()
         }
-        Button("Reset") { timers.resetCounter() }
+        Button("Reset") { timers.resetCounter() }.fixedSize()
       }
       HStack {
         Text("Pace")
@@ -148,7 +172,7 @@ private struct CounterSection: View {
         Spacer()
         if timers.bpm != Int(SnipeMath.bpm) {
           Button("Reset to 60") { timers.bpm = Int(SnipeMath.bpm) }
-            .buttonStyle(.link)
+            .linkButtonStyle()
         }
       }
       .disabled(timers.counterRunning)
@@ -173,6 +197,7 @@ private struct PaceField: View {
 
   var body: some View {
     TextField("BPM", text: $timers.paceText)
+      .numberKeyboard()
       .multilineTextAlignment(.trailing)
       .frame(width: 50)
       .focused($focused)
@@ -221,6 +246,7 @@ private struct CountdownSection: View {
       HStack {
         Text("Correction")
         TextField("0", value: $timers.correction, format: .number.precision(.fractionLength(0...3)))
+          .numberKeyboard(allowMinus: true)
           .multilineTextAlignment(.trailing)
           .frame(width: 70)
           .disabled(timers.cdRunning)

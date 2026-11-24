@@ -71,6 +71,11 @@ final class SoundPlayer: @unchecked Sendable {
   func prepare() {
     lock.lock(); defer { lock.unlock() }
     guard !started || !engine.isRunning else { return }
+    #if os(iOS)
+    // Play even with the silent switch on, alongside any other audio.
+    try? AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
+    try? AVAudioSession.sharedInstance().setActive(true)
+    #endif
     engine.prepare()
     do {
       try engine.start()

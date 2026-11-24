@@ -1,15 +1,17 @@
-// Build Resources/AppIcon.icns from a pixel-art PNG.
+// Build the app icons from a pixel-art PNG.
 //
-//   swift tools/make_icon.swift Resources/AppIcon-source.png Resources/AppIcon.icns [style]
+//   macOS (.icns, art on a rounded tile with a shadow):
+//     swift tools/make_icon.swift Resources/AppIcon-source.png Resources/AppIcon.icns [style]
+//   iOS (1024 px full-bleed .png, no transparency; iOS rounds the corners itself):
+//     swift tools/make_icon.swift Resources/AppIcon-source.png ios/.../AppIcon.appiconset/AppIcon.png [style]
 //
-// The art is drawn on a macOS-style rounded-square tile. Large sizes use whole-number
-// nearest-neighbour scaling so the pixels stay crisp; 16/32 px are smoothed.
+// Large sizes use whole-number nearest-neighbour scaling so the pixels stay crisp; 16/32 px are smoothed.
 // `style` picks the tile colour: ice (default), slate or sand.
 import AppKit
 
 let args = CommandLine.arguments
 guard args.count >= 3 else {
-  print("usage: swift tools/make_icon.swift <source.png> <out.icns> [ice|slate|sand]")
+  print("usage: swift tools/make_icon.swift <source.png> <out.icns | out.png> [ice|slate|sand]")
   exit(2)
 }
 let style = args.count > 3 ? args[3] : "ice"
@@ -40,8 +42,9 @@ let native = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: nw, pixelsHigh:
 for y in 0..<nh { for x in 0..<nw { native.setColor(srcRep.colorAt(x: x * block, y: y * block)!, atX: x, y: y) } }
 let art = native.cgImage!
 
-/// Render one icon size. `size` is in pixels.
-func render(_ size: Int) -> NSBitmapImageRep {
+/// Render one icon size. `size` is in pixels. `fullBleed` fills the whole square with no
+/// transparency (iOS); otherwise the art sits on a macOS rounded tile.
+func render(_ size: Int, fullBleed: Bool = false) -> NSBitmapImageRep {
   let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: size, pixelsHigh: size, bitsPerSample: 8,
                              samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
                              colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
@@ -49,6 +52,16 @@ func render(_ size: Int) -> NSBitmapImageRep {
   NSGraphicsContext.saveGraphicsState()
   NSGraphicsContext.current = ctx
   let s = CGFloat(size) / 1024
+  if fullBleed {
+    NSGradient(starting: top, ending: bottom)!.draw(in: NSRect(x: 0, y: 0, width: size, height: size), angle: -90)
+    // 20 px per native pixel at 1024, centred; iOS's corner mask leaves plenty of margin.
+    let artPx = CGFloat(nw) * 20 * s
+    let rect = NSRect(x: (CGFloat(size) - artPx) / 2, y: (CGFloat(size) - artPx) / 2, width: artPx, height: artPx)
+    ctx.cgContext.interpolationQuality = .none
+    ctx.cgContext.draw(art, in: rect.integral)
+    NSGraphicsContext.restoreGraphicsState()
+    return rep
+  }
   // Apple's macOS icon grid: 824 px tile, 100 px margin, ~185 px corner radius at 1024.
   let tile = NSRect(x: 100 * s, y: 100 * s, width: 824 * s, height: 824 * s)
   let path = NSBezierPath(roundedRect: tile, xRadius: 185 * s, yRadius: 185 * s)
@@ -70,8 +83,19 @@ func render(_ size: Int) -> NSBitmapImageRep {
   return rep
 }
 
-// Write an .iconset folder and convert it with iconutil.
 let out = URL(fileURLWithPath: args[2])
+if out.pathExtension.lowercased() == "png" {
+  // iOS icons must not have an alpha channel: redraw the (fully opaque) image without one.
+  let opaque = render(1024, fullBleed: true).cgImage!
+  let cg = CGContext(data: nil, width: 1024, height: 1024, bitsPerComponent: 8, bytesPerRow: 0,
+                     space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+  cg.draw(opaque, in: CGRect(x: 0, y: 0, width: 1024, height: 1024))
+  try! NSBitmapImageRep(cgImage: cg.makeImage()!).representation(using: .png, properties: [:])!.write(to: out)
+  print("wrote \(out.path) (1024 px full-bleed, art \(nw)x\(nh), style \(style))")
+  exit(0)
+}
+
+// Write an .iconset folder and convert it with iconutil.
 let iconset = FileManager.default.temporaryDirectory.appendingPathComponent("AppIcon-\(UUID().uuidString).iconset")
 try! FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
 for pt in [16, 32, 128, 256, 512] {
