@@ -3,7 +3,8 @@ import PackageDescription
 
 // RNGCore and rngcheck use only the Swift standard library and build on macOS, Linux and Windows.
 // SnipeKit (snipe-timer model, beeps and panel) and the macOS app need Apple frameworks, so they're
-// only added when building on a Mac. The iPhone/iPad app lives in ios/ and uses RNGCore and SnipeKit.
+// only added when building on a Mac. The Windows app (Win32, no other dependencies) is only added
+// when building on Windows. The iPhone/iPad app lives in ios/ and uses RNGCore and SnipeKit.
 // See CONTRIBUTING.md for how to add a front end for another platform.
 
 var products: [Product] = [
@@ -25,6 +26,16 @@ products.append(.library(name: "SnipeKit", targets: ["SnipeKit"]))
 targets.append(.target(name: "SnipeKit", dependencies: ["RNGCore"]))
 // The native macOS app (SwiftUI/AppKit).
 targets.append(.executableTarget(name: "MHXXRNG", dependencies: ["RNGCore", "SnipeKit"]))
+#endif
+
+#if os(Windows)
+// The native Windows app (Win32). Built as a GUI program: no console window, but the usual
+// main() entry point. Packaged by build_windows.ps1.
+targets.append(.executableTarget(
+  name: "MHGUCharmsRNGWin",
+  dependencies: ["RNGCore"],
+  linkerSettings: [.unsafeFlags(["-Xlinker", "/SUBSYSTEM:WINDOWS", "-Xlinker", "/ENTRY:mainCRTStartup"])]
+))
 #endif
 
 let package = Package(

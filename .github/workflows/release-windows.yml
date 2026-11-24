@@ -1,0 +1,44 @@
+# Builds the Windows app, smoke-tests it and attaches
+# MHGU-Charms-RNG-<version>-Windows.zip to a GitHub release.
+#
+# Runs when a release is published, or by hand (Actions › Windows release › Run workflow):
+# pick the branch to build and, optionally, the tag of the release to attach the zip to.
+name: Windows release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of the release to attach the zip to (leave empty to only build it)
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Build and attach the Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: compnerd/gha-setup-swift@9ff1ee4c44888c5817fc14d1b257ac8cabb4935f # v0.5.1
+        with:
+          swift-version: swift-6.1-release
+          swift-build: 6.1-RELEASE
+      - name: Build, package and smoke-test
+        shell: pwsh
+        run: ./build_windows.ps1 -SmokeTest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-app
+          path: dist/*.zip
+      - name: Attach the zip to the release
+        if: github.event_name == 'release' || inputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$TAG" dist/*.zip --clobber --repo "$GITHUB_REPOSITORY"
