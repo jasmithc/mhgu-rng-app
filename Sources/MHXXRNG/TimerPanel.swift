@@ -1,7 +1,7 @@
 import RNGCore
 import SwiftUI
 
-/// Right-side panel: continue-cycle calculator, 60 BPM counter, stopwatch, final countdown.
+/// Right-side panel: continue-cycle calculator, continue counter (metronome), stopwatch, final countdown.
 struct TimerPanel: View {
   @ObservedObject var timers: SnipeTimers
 
@@ -84,7 +84,7 @@ private struct CalculatorSection: View {
         Text("The target frame must be above 3600.").font(.caption).foregroundStyle(.red)
       } else {
         ResultRow(label: "Advances (2 min to spare)", value: String(format: "%.2f", c.advancesWithSpare))
-        ResultRow(label: "Time at 60 BPM", value: SnipeTimers.clockString(c.minutes * 60))
+        ResultRow(label: "Time at \(timers.bpm) BPM", value: SnipeTimers.clockString(c.minutes * 60))
         ResultRow(label: "Frames advanced meanwhile", value: String(format: "%.1f", c.framesAdvanced))
         // A plain button drawn as a checkbox: the whole row is clickable.
         Button {
@@ -120,7 +120,7 @@ private struct CalculatorSection: View {
 private struct CounterSection: View {
   @ObservedObject var timers: SnipeTimers
   var body: some View {
-    SectionBox(title: "Continue Counter · 60 BPM", symbol: "metronome") {
+    SectionBox(title: "Continue Counter · \(timers.bpm) BPM", symbol: "metronome") {
       TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !timers.counterRunning)) { ctx in
         let n = timers.counterValue(at: timers.now)
         BigReadout(text: "\(n) / \(timers.counterTarget)",
@@ -139,7 +139,31 @@ private struct CounterSection: View {
         }
         Button("Reset") { timers.resetCounter() }
       }
+      HStack {
+        Text("Pace")
+        TextField("BPM", value: $timers.bpm, format: .number.grouping(.never))
+          .multilineTextAlignment(.trailing)
+          .frame(width: 50)
+          .onSubmit { clampBpm() }
+        Stepper("", value: $timers.bpm, in: SnipeMath.bpmRange, step: 5)
+          .labelsHidden()
+        Text("BPM").foregroundStyle(.secondary)
+        Spacer()
+        if timers.bpm != Int(SnipeMath.bpm) {
+          Button("Reset to 60") { timers.bpm = Int(SnipeMath.bpm) }
+            .buttonStyle(.link)
+        }
+      }
+      .disabled(timers.counterRunning)
+      .onChange(of: timers.bpm) { clampBpm() }
+      Text("Continue presses per minute. The calculator above uses the same pace.")
+        .font(.caption).foregroundStyle(.secondary)
     }
+  }
+
+  func clampBpm() {
+    let r = SnipeMath.bpmRange
+    if !r.contains(timers.bpm) { timers.bpm = min(max(timers.bpm, r.lowerBound), r.upperBound) }
   }
 }
 

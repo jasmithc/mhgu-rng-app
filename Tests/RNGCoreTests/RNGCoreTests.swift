@@ -239,6 +239,16 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertEqual(ContinueCalc(target: 3000).neededWhole, 0)
   }
 
+  func testContinueCalcPace() {
+    // Faster pace: less real time passes during the cycles, so slightly more cycles are needed.
+    XCTAssertEqual(ContinueCalc(target: 296_260).bpm, 60)
+    let fast = ContinueCalc(target: 296_260, bpm: 90)
+    XCTAssertEqual(fast.minutes, (296_260 - 3600) / 702.0 / 90, accuracy: 1e-9)
+    XCTAssertEqual(fast.neededWhole, 405)
+    XCTAssertEqual(ContinueCalc(target: 296_260, bpm: 120).neededWhole, 407)
+    XCTAssertEqual(ContinueCalc(target: 296_260, poogie: true, bpm: 90).neededWhole, 400)
+  }
+
   func testCountdown() {
     // 0d 0h 2m 37s 13f wait, 10 s on the stopwatch, −27 frames correction.
     XCTAssertEqual(countdownSeconds(waitFrames: 4723, stopwatchSeconds: 10, correctionSeconds: -27 / 30.0),

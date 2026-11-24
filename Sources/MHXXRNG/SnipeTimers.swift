@@ -10,7 +10,6 @@ enum CorrectionUnit: String, CaseIterable, Identifiable {
 
 @MainActor
 final class SnipeTimers: ObservableObject {
-  nonisolated static let bpm = SnipeMath.bpm
   nonisolated static let fps = SnipeMath.fps
   private let defaults = UserDefaults.standard
   private let clock = ContinuousClock()
@@ -28,9 +27,16 @@ final class SnipeTimers: ObservableObject {
       if !counterRunning { counterTarget = calc.neededWhole }
     }
   }
-  var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie) }
+  /// Continue presses per minute: the counter's beat, and the pace the calculator assumes.
+  @Published var bpm: Int {
+    didSet {
+      defaults.set(bpm, forKey: "timer.bpm")
+      if !counterRunning { counterTarget = calc.neededWhole }
+    }
+  }
+  var calc: ContinueCalc { ContinueCalc(target: calcTarget, poogie: poogie, bpm: Double(bpm)) }
 
-  // MARK: Continue counter (60 BPM metronome)
+  // MARK: Continue counter (metronome at `bpm`)
   @Published var counterTarget: Int
   @Published private(set) var counterStart: ContinuousClock.Instant?
   @Published private(set) var counterRunning = false
@@ -62,7 +68,10 @@ final class SnipeTimers: ObservableObject {
     calcTarget = t
     let pg = defaults.bool(forKey: "timer.poogie")
     poogie = pg
-    counterTarget = ContinueCalc(target: t, poogie: pg).neededWhole
+    let savedBpm = defaults.object(forKey: "timer.bpm") as? Int ?? Int(SnipeMath.bpm)
+    let pace = min(max(savedBpm, SnipeMath.bpmRange.lowerBound), SnipeMath.bpmRange.upperBound)
+    bpm = pace
+    counterTarget = ContinueCalc(target: t, poogie: pg, bpm: Double(pace)).neededWhole
     waitText = defaults.string(forKey: "timer.waitText") ?? "0d 0h 2m 37s 13f"
     correction = defaults.object(forKey: "timer.correction") as? Double ?? 0
     correctionUnit = CorrectionUnit(rawValue: defaults.string(forKey: "timer.correctionUnit") ?? "") ?? .seconds
@@ -78,13 +87,13 @@ final class SnipeTimers: ObservableObject {
     if counterFinished { return counterTarget }
     guard let s = counterStart else { return 0 }
     let elapsed = (t - s).seconds
-    return min(counterTarget, Int((elapsed * SnipeTimers.bpm / 60).rounded(.down)) + 1)
+    return min(counterTarget, Int((elapsed * Double(bpm) / 60).rounded(.down)) + 1)
   }
 
   func startCounter() {
     guard counterTarget > 0 else { return }
     let start = clock.now + .milliseconds(150)  // let the audio engine settle before beat 1
-    let period = 60 / SnipeTimers.bpm
+    let period = 60 / Double(bpm)
     let events = (0..<counterTarget).map { n in
       BeepScheduler.Event(at: start + .nanoseconds(Int64(Double(n) * period * 1e9)),
                           beep: n == counterTarget - 1 ? .beatFinal : .beat)
