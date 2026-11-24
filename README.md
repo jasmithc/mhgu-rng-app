@@ -41,6 +41,8 @@ For how charm generation and sniping work, step by step, read the guides in thos
 2. Right-click the zip, choose **Extract All…**, and keep the extracted **MHGU Charms RNG** folder together: the `.dll` files next to the app are the Swift runtime it needs. No installer and nothing else to install.
 3. Open **MHGU Charms RNG.exe**. The first time, Windows SmartScreen may say it "protected your PC", because the app isn't code-signed. Click **More info**, then **Run anyway**.
 
+<img width="1044" height="788" alt="The Windows version: tools on the left, Charm Search with its result in the middle, and the snipe timer panel on the right" src="docs/images/windows-app.png" />
+
 The Windows app has the same tools, God charm presets and snipe timer as the Mac app. Keyboard shortcuts: **Ctrl+Enter** runs the tool and **Esc** stops it. The timer shortcuts are **Ctrl+Alt+T** (show or hide the timer panel), **Ctrl+Alt+P** (Poogie), **Ctrl+Alt+C** (continue counter), **Ctrl+Shift+S** (stopwatch) and **Ctrl+Shift+Enter** (countdown). Settings are kept in the registry under `HKEY_CURRENT_USER\Software\MHGU Charms RNG`.
 
 ## Build from source
