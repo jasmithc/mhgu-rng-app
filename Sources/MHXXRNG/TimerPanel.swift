@@ -158,27 +158,20 @@ private struct CounterSection: View {
   }
 }
 
-/// Pace entry that only takes effect on Return or when you click away, so half-typed
-/// numbers (an empty box, or "9" on the way to "90") never reach the timer.
+/// Pace entry. A valid pace (30–240) applies as you type; anything else ("", "9" on the way to
+/// "90", "500") waits for Return, leaving the box, or Start, and is then kept within range.
 private struct PaceField: View {
   @ObservedObject var timers: SnipeTimers
-  @State private var text = ""
   @FocusState private var focused: Bool
 
   var body: some View {
-    TextField("BPM", text: $text)
+    TextField("BPM", text: $timers.paceText)
       .multilineTextAlignment(.trailing)
       .frame(width: 50)
       .focused($focused)
-      .onSubmit(commit)
-      .onChange(of: focused) { if !focused { commit() } }
-      .onChange(of: timers.bpm) { if !focused { text = String(timers.bpm) } }
-      .onAppear { text = String(timers.bpm) }
-  }
-
-  func commit() {
-    if let v = Int(text.trimmingCharacters(in: .whitespaces)) { timers.bpm = v }   // the model clamps it
-    text = String(timers.bpm)
+      .onChange(of: timers.paceText) { timers.paceTextChanged() }
+      .onSubmit { timers.commitPaceText() }
+      .onChange(of: focused) { if !focused { timers.commitPaceText() } }
   }
 }
 
