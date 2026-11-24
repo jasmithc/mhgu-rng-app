@@ -119,14 +119,37 @@ final class RNGCoreTests: XCTestCase {
     let general = CharmPresets.groups.first { $0.name == "General Blademaster" }!
     XCTAssertEqual(general.presets.first?.label(en), "Tenderizer +6 / Expert +10 ◯◯◯")
     let sns = CharmPresets.groups.first { $0.name == "Sword & Shield / Dual Blades" }!.presets.map { $0.label(en) }
+    let generalLabels = general.presets.map { $0.label(en) }
     for element in ["Fire Atk", "Water Atk", "Thunder Atk", "Ice Atk", "Dragon Atk"] {
-      XCTAssertTrue(sns.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)
+      XCTAssertTrue(sns.contains("Crit Element +6 / \(element) +13 ◯◯◯"), element)          // only SnS/DB
+      XCTAssertTrue(generalLabels.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)   // SnS/DB and CB → General
     }
-    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
-    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
+    // Before de-duplication: 101 Blademaster and 44 Gunner presets; after: 66 and 42.
+    XCTAssertEqual(CharmPresets.allGroups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
+    XCTAssertEqual(CharmPresets.allGroups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 66)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 42)
     let bow = CharmPresets.groups.first { $0.name == "Bow" }!.presets.map { $0.label(en) }
     XCTAssertTrue(bow.contains("Expert +4 / Power C+ +12 ◯ (Shining Charm)"))
     XCTAssertTrue(bow.contains("Expert +3 / Power C+ +11 ◯◯ (Shining Charm)"))
+  }
+
+  func testPresetsAreListedOnce() {
+    for section in PresetSection.allCases {
+      let groups = CharmPresets.groups.filter { $0.section == section }
+      var seen = Set<CharmPreset>()
+      for g in groups { for p in g.presets {
+        XCTAssertTrue(seen.insert(p).inserted, "\(p.label(languageTables[.en]!)) listed twice in \(section)")
+      } }
+      XCTAssertTrue(groups.allSatisfy { !$0.presets.isEmpty })
+    }
+    let en = languageTables[.en]!
+    let general = CharmPresets.groups.first { $0.name == "General Blademaster" }!.presets.map { $0.label(en) }
+    XCTAssertTrue(general.contains("Blunt +6 / Expert +10 ◯◯◯"))                 // was Hammer and Switch Axe
+    XCTAssertEqual(CharmPresets.groups.first { $0.name == "Hammer" }!.presets.map { $0.label(en) },
+                   ["Tenderizer +6 / KO +10 ◯◯◯"])
+    let gunnerGeneral = CharmPresets.groups.first { $0.name == "General Gunner" }!.presets.map { $0.label(en) }
+    XCTAssertTrue(gunnerGeneral.contains("Recoil +6 / Reload Spd +7 ◯◯◯"))         // was LBG and HBG
   }
 
   func testCanRollRejectsImpossibleCharms() {
