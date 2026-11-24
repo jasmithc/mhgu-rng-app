@@ -130,10 +130,14 @@ struct ToolForm: View {
     case .search:
       LabeledContent("Presets") {
         Menu {
-          ForEach(CharmPresets.groups, id: \.name) { group in
-            Menu(group.name) {
-              ForEach(group.presets, id: \.self) { p in
-                Button(p.label(state.lang)) { state.applyPreset(p) }
+          ForEach(PresetSection.allCases, id: \.self) { section in
+            Section(section.rawValue) {
+              ForEach(CharmPresets.groups.filter { $0.section == section }, id: \.name) { group in
+                Menu(group.name) {
+                  ForEach(group.presets, id: \.self) { p in
+                    Button(p.label(state.lang)) { state.applyPreset(p) }
+                  }
+                }
               }
             }
           }
@@ -141,7 +145,7 @@ struct ToolForm: View {
           Label("God charms", systemImage: "star")
         }
         .fixedSize()
-        .help("Fill in the search with a top 3-slot Enduring charm for your weapon")
+        .help("Fill in the search with a top charm for your weapon")
       }
       Picker("Match", selection: $state.search.mode) {
         ForEach(SearchMode.allCases) { Text($0.rawValue).tag($0) }

@@ -48,7 +48,7 @@ Requires macOS 14+ and the Xcode command-line tools. `./build_app.sh --universal
 
 | Sidebar tool | What it does | Original function |
 |---|---|---|
-| Charm Search: Exact / At least | Find the frames where a charm appears (*At least* also shows aim points). The **God charms** presets menu fills in top 3-slot Enduring charms by weapon, and the search warns (and doesn't run) if the charm you entered can't exist. | `search()` / `search_greater()` |
+| Charm Search: Exact / At least | Find the frames where a charm appears (*At least* also shows aim points). The **God charms** presets menu fills in top charms for each Blademaster and Gunner weapon, and the search warns (and doesn't run) if the charm you entered can't exist. | `search()` / `search_greater()` |
 | Around a Frame | List every charm near a frame | `around()` |
 | Frame → Wait Time | Convert frames to `Xd Xh Xm Xs Xf` | `watch()` |
 | Halcyon / Juju Meld | Charms a Halcyon or Juju meld gives | `halcyonpush()` / `jujupush()` |

@@ -122,7 +122,11 @@ final class RNGCoreTests: XCTestCase {
     for element in ["Fire Atk", "Water Atk", "Thunder Atk", "Ice Atk", "Dragon Atk"] {
       XCTAssertTrue(sns.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)
     }
-    XCTAssertEqual(CharmPresets.groups.reduce(0) { $0 + $1.presets.count }, 101)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
+    let bow = CharmPresets.groups.first { $0.name == "Bow" }!.presets.map { $0.label(en) }
+    XCTAssertTrue(bow.contains("Expert +4 / Power C+ +12 ◯ (Shining Charm)"))
+    XCTAssertTrue(bow.contains("Expert +3 / Power C+ +11 ◯◯ (Shining Charm)"))
   }
 
   func testCanRollRejectsImpossibleCharms() {

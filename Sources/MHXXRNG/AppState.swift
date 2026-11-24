@@ -157,6 +157,8 @@ final class AppState: ObservableObject {
     search.skill2 = p.skill2
     search.points2 = p.points2
     search.slots = p.slots
+    // Top charms are rare (often tens of millions of frames away), so search far enough to find them.
+    search.count = max(search.count, 100_000_000)
     status = "Preset: \(p.label(lang)) (\(kindName(p.kind)))"
   }
 

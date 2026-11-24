@@ -11,14 +11,21 @@ public struct CharmPreset: Hashable, Sendable {
   public let points2: Int
   public let slots: Int
 
-  /// "Tenderizer +6 / Expert +10 ◯◯◯" in the given language.
+  /// "Tenderizer +6 / Expert +10 ◯◯◯" in the given language, with the charm kind added
+  /// when it isn't an Enduring charm.
   public func label(_ lang: LanguageTables) -> String {
     "\(lang.skill[skill1]) +\(points1) / \(lang.skill[skill2]) +\(points2) " + String(repeating: "◯", count: slots)
+      + (kind == .enduring ? "" : " (\(lang.kinds[kind.rawValue]))")
   }
+}
+
+public enum PresetSection: String, CaseIterable, Sendable {
+  case blademaster = "Blademaster", gunner = "Gunner"
 }
 
 public struct CharmPresetGroup: Hashable, Sendable {
   public let name: String
+  public let section: PresetSection
   public let presets: [CharmPreset]
 }
 
@@ -85,6 +92,35 @@ public enum CharmPresets {
       ("Sharpness", 7, "Expert", 10), ("Sharpness", 7, "Handicraft", 5),
       ("Vault", 6, "Expert", 10), ("Vault", 6, "Critical Up", 5),
     ]),
+
+    // Gunner: an ammo or weapon skill at its Enduring maximum, paired like the Blademaster
+    // charms, built from community weapon-guide recommendations and checked against the tables.
+    group("General Gunner", section: .gunner, [
+      ("Normal Up", 6, "Expert", 10), ("Normal Up", 6, "Critical Up", 5), ("Normal Up", 6, "Attack", 10),
+      ("Pierce Up", 6, "Expert", 10), ("Pierce Up", 6, "Critical Up", 5), ("Pierce Up", 6, "Attack", 10),
+      ("Pellet Up", 6, "Expert", 10), ("Pellet Up", 6, "Critical Up", 5),
+      ("Heavy Up", 6, "Expert", 10), ("Heavy Up", 6, "Critical Up", 5),
+      ("Chain Crit", 5, "Expert", 10), ("Tenderizer", 6, "Expert", 10), ("Ammo Saver", 7, "Expert", 10),
+    ]),
+    group("Light Bowgun", section: .gunner, [
+      ("Rapid Fire", 5, "Expert", 10), ("Rapid Fire", 5, "Critical Up", 5),
+      ("Normal Up", 6, "Rapid Fire", 5), ("Pierce Up", 6, "Rapid Fire", 5), ("Ammo Saver", 7, "Rapid Fire", 5),
+      ("Recoil", 6, "Reload Spd", 7), ("Reload Spd", 7, "Recoil", 7), ("Evade Dist", 6, "Expert", 10),
+    ]),
+    group("Heavy Bowgun", section: .gunner, [
+      ("Recoil", 6, "Reload Spd", 7), ("Reload Spd", 7, "Recoil", 7),
+      ("Normal Up", 6, "Recoil", 7), ("Pierce Up", 6, "Recoil", 7), ("Pierce Up", 6, "Reload Spd", 7),
+      ("Pellet Up", 6, "Recoil", 7), ("Loading", 5, "Expert", 10), ("Ammo Saver", 7, "Recoil", 7),
+    ]),
+    // Power C+ (for "Use Power Coating") only appears on Shining charms, and high-point Shining
+    // charms can have at most 1 slot: max points with 1 slot, or slightly less with 2.
+    group("Bow", section: .gunner, [
+      ("Dead Eye", 5, "Expert", 10), ("Dead Eye", 5, "Critical Up", 5),
+      ("FastCharge", 6, "Dead Eye", 5), ("FastCharge", 6, "Expert", 10), ("Normal Up", 6, "FastCharge", 5),
+      ("Normal Up", 6, "Dead Eye", 5), ("Pierce Up", 6, "Dead Eye", 5), ("Pellet Up", 6, "Dead Eye", 5),
+      ("Heavy Up", 6, "Dead Eye", 5), ("Chain Crit", 5, "Dead Eye", 5), ("Evasion", 6, "Dead Eye", 5),
+    ], extra: rows([("Expert", 4, "Power C+", 12), ("Attack", 4, "Power C+", 12)], kind: .shining, slots: 1)
+      + rows([("Expert", 3, "Power C+", 11), ("Attack", 3, "Power C+", 11)], kind: .shining, slots: 2)),
   ]
 
   /// "Element Atk" presets, one per element.
@@ -93,15 +129,21 @@ public enum CharmPresets {
   }
 
   /// Builds a group of 3-slot Enduring presets from English skill names.
-  static func group(_ name: String, _ rows: [(String, Int, String, Int)]) -> CharmPresetGroup {
+  static func group(_ name: String, section: PresetSection = .blademaster,
+                    _ list: [(String, Int, String, Int)], extra: [CharmPreset] = []) -> CharmPresetGroup {
+    CharmPresetGroup(name: name, section: section, presets: rows(list) + extra)
+  }
+
+  /// Presets from English skill names (3-slot Enduring unless stated).
+  static func rows(_ list: [(String, Int, String, Int)], kind: CharmKind = .enduring, slots: Int = 3) -> [CharmPreset] {
     let en = languageTables[.en]!.skill
     func id(_ s: String) -> Int {
       guard let i = en.firstIndex(of: s) else { preconditionFailure("unknown skill name \(s)") }
       return i
     }
-    return CharmPresetGroup(name: name, presets: rows.map {
-      CharmPreset(kind: .enduring, skill1: id($0.0), points1: $0.1, skill2: id($0.2), points2: $0.3, slots: 3)
-    })
+    return list.map {
+      CharmPreset(kind: kind, skill1: id($0.0), points1: $0.1, skill2: id($0.2), points2: $0.3, slots: slots)
+    }
   }
 }
 
