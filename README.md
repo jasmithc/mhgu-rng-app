@@ -65,8 +65,6 @@ The toolbar picks the charm kind (Enduring, Timeworn, Shining or Mystery) and th
 
 Show or hide the panel with the timer button in the toolbar (⌥⌘T). Every control is also in the **Timer** menu. The timers keep running when the panel is hidden, and the Mac stays awake while the counter or countdown runs.
 
-   <img width="341" height="241" alt="image" src="https://github.com/user-attachments/assets/cf91c224-25be-4aac-9f2a-3743e9cb4cec" />
-
 - **Continue Cycles**: enter the target frame, or turn on *Set Continue Cycles target to the frame found* in Charm Search to fill it in from the first result. It calculates:
   - `(T − 3600) / 702` advances with 2 minutes to spare
   - the time those take at 60 BPM
@@ -75,21 +73,31 @@ Show or hide the panel with the timer button in the toolbar (⌥⌘T). Every con
 
   The result is rounded down and becomes the counter target. Turn on **Poogie?** (⌥⌘P) if Poogie is in your room: it takes 5 cycles off, leaving time to remove Poogie.
 
-  <img width="341" height="107" alt="image" src="https://github.com/user-attachments/assets/71f99596-2f19-4527-9560-d73322ba83e9" />
+  <p align="center">
+    <img width="341" height="241" alt="Continue Cycles section: target frame 101840, Poogie ticked, 133.96 cycles needed, rounded down to 128" src="https://github.com/user-attachments/assets/cf91c224-25be-4aac-9f2a-3743e9cb4cec" />
+  </p>
 
 - **Continue Counter** (⌥⌘C): beeps at 60 BPM, counting 1 → target, with a higher, longer beep on the last count.
 
-  <img width="342" height="143" alt="image" src="https://github.com/user-attachments/assets/2e252ff9-e641-45f6-ba4f-4a00a4773505" />
+  <p align="center">
+    <img width="341" height="107" alt="Continue Counter section showing 0 / 128, with the target and Start and Reset buttons" src="https://github.com/user-attachments/assets/71f99596-2f19-4527-9560-d73322ba83e9" />
+  </p>
 
 - **Stopwatch** (⇧⌘S): start it when you press Combine.
 
-  <img width="341" height="333" alt="image" src="https://github.com/user-attachments/assets/4175b34b-4174-48c2-9792-76af64aff648" />
+  <p align="center">
+    <img width="342" height="143" alt="Stopwatch section showing 0:00:00.00, with Start and Reset buttons" src="https://github.com/user-attachments/assets/2e252ff9-e641-45f6-ba4f-4a00a4773505" />
+  </p>
 
 - **Final Countdown** (⇧⌘↩): countdown = wait time − stopwatch + correction.
   - Running *Frame → Wait Time* fills in the wait time. You can also type `0d 1h 40m 6s 15f` or a frame count.
   - Enter the correction in seconds or frames (+ waits longer, − shorter).
   - Starting the countdown freezes the stopwatch.
   - It beeps on each of the last 10 seconds, then plays a long beep at zero.
+
+  <p align="center">
+    <img width="341" height="333" alt="Final Countdown section: wait time 0d 0h 3m 38s 18f, correction −16 frames, countdown 0:03:38.06 with a Start Countdown button" src="https://github.com/user-attachments/assets/4175b34b-4174-48c2-9792-76af64aff648" />
+  </p>
 
 ## English skill names
 
