@@ -1,5 +1,6 @@
-# Builds the Windows app, smoke-tests it and attaches
-# MHGU-Charms-RNG-<version>-Windows.zip to a GitHub release.
+# Builds the Windows app, smoke-tests it, attaches
+# MHGU-Charms-RNG-<version>-Windows.zip to a GitHub release and adds the Windows
+# install steps to its notes (once; tools/release_notes_windows.py).
 #
 # Runs when a release is published, or by hand (Actions › Windows release › Run workflow):
 # pick the branch to build and, optionally, the tag of the release to attach the zip to.
@@ -42,3 +43,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name || inputs.tag }}
         run: gh release upload "$TAG" dist/*.zip --clobber --repo "$GITHUB_REPOSITORY"
+      - name: Add the Windows install steps to the release notes
+        if: github.event_name == 'release' || inputs.tag != ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          zip=$(ls dist/*-Windows.zip)
+          version=$(basename "$zip" | sed -E 's/^MHGU-Charms-RNG-(.+)-Windows\.zip$/\1/')
+          notes="$RUNNER_TEMP/release-notes.md"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json body --jq .body > "$notes"
+          if [ "$(python tools/release_notes_windows.py "$notes" "$version")" = changed ]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file "$notes"
+            echo "Added the Windows install steps to the $TAG release notes."
+          else
+            echo "The $TAG release notes already have Windows install steps."
+          fi
