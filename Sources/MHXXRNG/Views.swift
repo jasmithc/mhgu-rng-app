@@ -366,12 +366,10 @@ struct OutputTextView: NSViewRepresentable {
     tv.isRichText = true
     tv.textContainerInset = NSSize(width: 10, height: 10)
     tv.backgroundColor = .textBackgroundColor
-    // Long lines scroll horizontally instead of wrapping, so columns stay aligned.
-    tv.isHorizontallyResizable = true
-    tv.textContainer?.widthTracksTextView = false
-    tv.textContainer?.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
-                                             height: CGFloat.greatestFiniteMagnitude)
-    scroll.hasHorizontalScroller = true
+    // Wrap long lines to the panel width (no horizontal scrolling).
+    tv.isHorizontallyResizable = false
+    tv.textContainer?.widthTracksTextView = true
+    scroll.hasHorizontalScroller = false
     return scroll
   }
 

@@ -208,7 +208,10 @@ enum OutputRenderer {
   static func render(_ out: Output) -> NSAttributedString {
     let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     let bold = NSFont.monospacedSystemFont(ofSize: 12, weight: .semibold)
-    let base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.textColor]
+    // Wrapped continuation lines are indented a little so each output line's start stays clear.
+    let para = NSMutableParagraphStyle()
+    para.headIndent = 4 * ("0" as NSString).size(withAttributes: [.font: font]).width
+    let base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.textColor, .paragraphStyle: para]
     let result = NSMutableAttributedString()
     for (i, line) in out.lines.enumerated() {
       if i > 0 { result.append(NSAttributedString(string: "\n", attributes: base)) }
