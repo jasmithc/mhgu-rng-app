@@ -9,7 +9,9 @@ Thanks for helping! The app is macOS-only today, but the RNG engine is written t
 | **RNGCore**: the RNG, charm generation, every search tool, and the snipe-timer maths (`ContinueCalc`, wait-time parsing, countdown). Swift standard library only. | `Sources/RNGCore` | macOS, Linux, Windows |
 | **rngcheck**: command-line harness that runs any engine function and prints its output (standard library only) | `Sources/rngcheck` | macOS, Linux, Windows |
 | **Unit tests** | `Tests/RNGCoreTests` | macOS, Linux, Windows |
-| **The macOS app**: SwiftUI windows, the timer panel, beeps (AVFoundation), settings | `Sources/MHXXRNG` | macOS only |
+| **SnipeKit**: the snipe timer model, precise beeps (AVFoundation) and timer panel, shared by both Apple apps | `Sources/SnipeKit` | macOS, iOS |
+| **The macOS app**: SwiftUI windows, tool forms, settings | `Sources/MHXXRNG` | macOS only |
+| **The iPhone/iPad app**: a Swift package app project, opened in Xcode | `ios/MHGUCharmsRNG.swiftpm` | iOS 17+ |
 
 `Package.swift` only adds the macOS app target when building on a Mac, so `swift build` and `swift test` work on every platform.
 

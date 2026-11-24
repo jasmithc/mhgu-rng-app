@@ -44,6 +44,27 @@ open "dist/MHGU Charms RNG.app"
 
 Requires macOS 14+ and the Xcode command-line tools. `./build_app.sh --universal` builds for both Apple Silicon and Intel and also makes the release zip.
 
+## iPhone and iPad
+
+There's also an iPhone/iPad version (iOS 17 or later) in [`ios/MHGUCharmsRNG.swiftpm`](ios/MHGUCharmsRNG.swiftpm). It uses the same engine and the same snipe timer as the Mac app, in four tabs:
+- **Search:** Charm Search with the God charm presets
+- **Tools:** the other tools
+- **Timer:** the snipe timer
+- **Settings**
+
+It isn't on the App Store. To install it on your own iPhone or iPad with a free Apple ID:
+
+1. On a Mac with Xcode, clone this repository. Keep the folder name `mhgu-rng-app`, which is the default; the iPhone project refers to it by that name.
+2. Open `ios/MHGUCharmsRNG.swiftpm` in Xcode.
+3. In **Xcode → Settings → Accounts**, add your Apple ID.
+4. Select the app in the project navigator, open **Signing & Capabilities**, and choose your **Personal Team**. If Xcode says the bundle identifier is taken, change it to something unique, such as `com.yourname.mhgu-charms-rng`.
+5. On the iPhone, turn on **Settings → Privacy & Security → Developer Mode** (the phone restarts). Connect it to the Mac and choose it as the run destination at the top of the Xcode window.
+6. Press **Run** (⌘R). The first time, trust your developer profile on the iPhone under **Settings → General → VPN & Device Management**.
+
+Apps installed with a free Apple ID stop opening after **7 days**. Connect the phone and press Run again to renew it; your settings are kept. A paid Apple Developer account removes this limit.
+
+While the counter or countdown is running, the screen stays on, and the beeps play even with the silent switch on.
+
 ## Tools
 
 | Sidebar tool | What it does | Original function |

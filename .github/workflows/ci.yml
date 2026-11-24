@@ -22,7 +22,7 @@ env:
 
 jobs:
   macos:
-    name: macOS (engine + app)
+    name: macOS (engine + Mac and iPhone apps)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
@@ -37,6 +37,9 @@ jobs:
           python3 tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
       - name: Build the .app bundle
         run: ./build_app.sh
+      - name: Build the iPhone/iPad app (Simulator, unsigned)
+        working-directory: ios/MHGUCharmsRNG.swiftpm
+        run: xcodebuild -scheme MHGUCharmsRNG -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build -quiet
 
   linux:
     name: Linux (engine)

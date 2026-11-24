@@ -1,5 +1,6 @@
 import AppKit
 import RNGCore
+import SnipeKit
 import SwiftUI
 
 @main
