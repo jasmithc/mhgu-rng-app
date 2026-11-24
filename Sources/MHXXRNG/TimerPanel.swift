@@ -188,7 +188,10 @@ private struct CountdownSection: View {
         Picker("", selection: $timers.correctionUnit) {
           ForEach(CorrectionUnit.allCases) { Text($0.rawValue).tag($0) }
         }
-        .labelsHidden().fixedSize()
+        .labelsHidden()
+        // A fixed width (fits "seconds") rather than .fixedSize(): the ideal-size measurement
+        // could collapse the menu to just "f".
+        .frame(width: 100)
         .disabled(timers.cdRunning)
       }
       Text("+ waits longer, − shorter.").font(.caption).foregroundStyle(.secondary)
