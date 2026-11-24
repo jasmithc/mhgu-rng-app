@@ -24,7 +24,7 @@ if len(sys.argv) < 2 or not pathlib.Path(sys.argv[1]).is_file():
     sys.exit('usage: python3 %s path/to/mhxx-rng.ipynb\n'
              '(get the notebook from https://github.com/jasmithc/mhgu-rng)' % pathlib.Path(sys.argv[0]).name)
 NB = pathlib.Path(sys.argv[1])
-CHECK = ROOT / '.build' / 'release' / 'rngcheck'
+CHECK = ROOT / '.build' / 'release' / ('rngcheck.exe' if sys.platform == 'win32' else 'rngcheck')
 
 
 # --- minimal numpy / numba stand-ins (only what search_combo / search_reward need) ---
@@ -50,7 +50,7 @@ numba.typed = typed
 sys.modules.update({'numpy': np, 'numba': numba, 'numba.typed': typed})
 
 ns = {}
-cells = json.loads(NB.read_text())['cells']
+cells = json.loads(NB.read_text(encoding='utf-8'))['cells']
 exec(''.join(cells[0]['source']).split('set_en()')[0], ns)  # s, x..., options
 for c in cells[1:4]:
     exec(''.join(c['source']), ns)
@@ -69,7 +69,7 @@ def py(kind, fn):
 
 
 def sw(kind, *args):
-    r = subprocess.run([str(CHECK), 'ja', str(kind), *map(str, args)], capture_output=True, text=True)
+    r = subprocess.run([str(CHECK), 'ja', str(kind), *map(str, args)], capture_output=True, text=True, encoding='utf-8')
     return r.stdout
 
 

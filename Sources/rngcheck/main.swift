@@ -2,13 +2,19 @@
 // so it can be diffed against the Python notebook (see tools/compare.py).
 //
 //   rngcheck <lang> <kind 0-3> <command> [args...]
-import Foundation
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#elseif canImport(ucrt)
+import ucrt
+#endif
 import RNGCore
 
 var args = Array(CommandLine.arguments.dropFirst())
 guard args.count >= 3, let lang = Language(rawValue: args[0]), let kindRaw = Int(args[1]),
       let kind = CharmKind(rawValue: kindRaw) else {
-  FileHandle.standardError.write("usage: rngcheck <en|ja|zh> <kind> <command> [args]\n".data(using: .utf8)!)
+  print("usage: rngcheck <en|ja|zh> <kind> <command> [args]")
   exit(2)
 }
 let cmd = args[2]
@@ -49,6 +55,6 @@ do {
     print("unknown command"); exit(2)
   }
 } catch {
-  print("error: \(error.localizedDescription)")
+  print("error: \(error)")
 }
 print(out.plainText, terminator: "")

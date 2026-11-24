@@ -16,7 +16,7 @@ if len(sys.argv) < 2 or not pathlib.Path(sys.argv[1]).is_file():
 NB = pathlib.Path(sys.argv[1])
 OUT = HERE.parent / 'Sources' / 'RNGCore' / 'Tables.swift'
 
-cells = json.loads(NB.read_text())['cells']
+cells = json.loads(NB.read_text(encoding='utf-8'))['cells']
 src = {}
 for c in cells:
     text = ''.join(c['source'])
@@ -100,5 +100,5 @@ lines.append(']')
 lines.append('')
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
-OUT.write_text('\n'.join(lines))
+OUT.write_text('\n'.join(lines), encoding='utf-8', newline='\n')
 print('wrote', OUT)
