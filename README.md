@@ -11,14 +11,23 @@ This app is a Swift port of the RNG analysis tool from:
 
 For how charm generation and sniping work, step by step, read the guides in those repositories. Examples include [sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) and the [function reference](https://github.com/jasmithc/mhgu-rng/blob/main/docs/functions.md).
 
-## Build and run
+## Download
+
+1. Download `MHGU-Charms-RNG-<version>-macOS.zip` from the [latest release](https://github.com/jasmithc/mhgu-rng-app/releases/latest). It runs on Apple Silicon and Intel Macs with macOS 14 or later.
+2. Double-click the zip to unpack it, then drag **MHGU Charms RNG** into your Applications folder.
+3. **The first time you open it**, macOS will warn that it can't check the app for malicious software. The app isn't signed with a paid Apple Developer ID, so macOS shows this warning for any app downloaded this way. To open it:
+   - Try to open the app once and close the warning.
+   - Go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to "MHGU Charms RNG".
+   - Confirm, and after that it opens normally.
+
+## Build from source
 
 ```bash
 ./build_app.sh
 open "dist/MHGU Charms RNG.app"
 ```
 
-Requires macOS 14+ and the Xcode command-line tools. Drag the `.app` into `/Applications` if you like.
+Requires macOS 14+ and the Xcode command-line tools. `./build_app.sh --universal` builds for both Apple Silicon and Intel and also makes the release zip.
 
 ## Tools
 
