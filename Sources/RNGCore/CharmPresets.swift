@@ -30,7 +30,58 @@ public struct CharmPresetGroup: Hashable, Sendable {
 }
 
 public enum CharmPresets {
-  public static let groups: [CharmPresetGroup] = [
+  /// The presets shown in the menu: `allGroups` with duplicates folded into each section's
+  /// General group, so a charm is listed once (see `deduplicated`).
+  public static let groups: [CharmPresetGroup] = deduplicated(allGroups)
+
+  /// Skills that only matter to particular weapons. A charm with one of these stays under its
+  /// weapons (even if two weapons share it) instead of moving to General.
+  public static let weaponSpecificSkills: Set<Int> = {
+    let en = languageTables[.en]!.skill
+    let names = [
+      "Artillery", "Maestro", "Crit Draw", "Punish Draw", "Sheathing", "Sheathe Sharpen", "KO",
+      "Guard", "Guard Up", "Vault", "FastCharge", "Loading",
+      "Rapid Fire", "Recoil", "Reload Spd", "Dead Eye",
+    ]
+    return Set(names.map { n in
+      guard let i = en.firstIndex(of: n) else { preconditionFailure("unknown skill name \(n)") }
+      return i
+    })
+  }()
+
+  static func isWeaponSpecific(_ p: CharmPreset) -> Bool {
+    weaponSpecificSkills.contains(p.skill1) || weaponSpecificSkills.contains(p.skill2)
+  }
+
+  /// Within each section, a general-purpose charm that is in the General group, or in two or
+  /// more weapon groups, is listed only under General. Charms with a weapon-specific skill stay
+  /// under their weapons. The first group of each section is its General group. Weapon groups
+  /// left empty are dropped.
+  static func deduplicated(_ groups: [CharmPresetGroup]) -> [CharmPresetGroup] {
+    var result: [CharmPresetGroup] = []
+    for section in PresetSection.allCases {
+      let inSection = groups.filter { $0.section == section }
+      guard let general = inSection.first else { continue }
+      let weapons = inSection.dropFirst()
+      var seenIn: [CharmPreset: Int] = [:]
+      for g in weapons { for p in Set(g.presets) { seenIn[p, default: 0] += 1 } }
+      var generalPresets = general.presets
+      for g in weapons {
+        for p in g.presets where seenIn[p, default: 0] > 1 && !isWeaponSpecific(p) && !generalPresets.contains(p) {
+          generalPresets.append(p)
+        }
+      }
+      result.append(CharmPresetGroup(name: general.name, section: section, presets: generalPresets))
+      for g in weapons {
+        let own = g.presets.filter { isWeaponSpecific($0) || !generalPresets.contains($0) }
+        if !own.isEmpty { result.append(CharmPresetGroup(name: g.name, section: section, presets: own)) }
+      }
+    }
+    return result
+  }
+
+  /// Every preset, grouped as recommended per weapon (with repeats).
+  static let allGroups: [CharmPresetGroup] = [
     group("General Blademaster", [
       ("Tenderizer", 6, "Expert", 10), ("Tenderizer", 6, "Critical Up", 5), ("Tenderizer", 6, "Attack", 10),
       ("Tenderizer", 6, "Sharpness", 7), ("Tenderizer", 6, "Handicraft", 5),

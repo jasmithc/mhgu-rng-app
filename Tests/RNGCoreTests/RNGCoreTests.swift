@@ -119,14 +119,43 @@ final class RNGCoreTests: XCTestCase {
     let general = CharmPresets.groups.first { $0.name == "General Blademaster" }!
     XCTAssertEqual(general.presets.first?.label(en), "Tenderizer +6 / Expert +10 ◯◯◯")
     let sns = CharmPresets.groups.first { $0.name == "Sword & Shield / Dual Blades" }!.presets.map { $0.label(en) }
+    let generalLabels = general.presets.map { $0.label(en) }
     for element in ["Fire Atk", "Water Atk", "Thunder Atk", "Ice Atk", "Dragon Atk"] {
-      XCTAssertTrue(sns.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)
+      XCTAssertTrue(sns.contains("Crit Element +6 / \(element) +13 ◯◯◯"), element)          // only SnS/DB
+      XCTAssertTrue(generalLabels.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)   // SnS/DB and CB → General
     }
-    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
+    // Before de-duplication: 101 Blademaster and 44 Gunner presets; after: 71 and 44.
+    XCTAssertEqual(CharmPresets.allGroups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 101)
+    XCTAssertEqual(CharmPresets.allGroups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
+    XCTAssertEqual(CharmPresets.groups.filter { $0.section == .blademaster }.reduce(0) { $0 + $1.presets.count }, 71)
     XCTAssertEqual(CharmPresets.groups.filter { $0.section == .gunner }.reduce(0) { $0 + $1.presets.count }, 44)
     let bow = CharmPresets.groups.first { $0.name == "Bow" }!.presets.map { $0.label(en) }
     XCTAssertTrue(bow.contains("Expert +4 / Power C+ +12 ◯ (Shining Charm)"))
     XCTAssertTrue(bow.contains("Expert +3 / Power C+ +11 ◯◯ (Shining Charm)"))
+  }
+
+  func testPresetsAreListedOnce() {
+    let en = languageTables[.en]!
+    func labels(_ name: String) -> [String] { CharmPresets.groups.first { $0.name == name }!.presets.map { $0.label(en) } }
+    for section in PresetSection.allCases {
+      let groups = CharmPresets.groups.filter { $0.section == section }
+      XCTAssertTrue(groups.allSatisfy { !$0.presets.isEmpty })
+      // General-purpose charms are listed once; weapon-specific ones may repeat across weapons
+      // but never appear under General.
+      var seen = Set<CharmPreset>()
+      for g in groups { for p in g.presets where !CharmPresets.isWeaponSpecific(p) {
+        XCTAssertTrue(seen.insert(p).inserted, "\(p.label(en)) listed twice in \(section)")
+      } }
+      XCTAssertFalse(groups[0].presets.contains(where: CharmPresets.isWeaponSpecific), "\(groups[0].name) has a weapon-specific charm")
+    }
+    // General-purpose repeats move to General.
+    XCTAssertTrue(labels("General Blademaster").contains("Blunt +6 / Expert +10 ◯◯◯"))       // was Hammer and Switch Axe
+    XCTAssertFalse(labels("Hammer").contains("Tenderizer +6 / Expert +10 ◯◯◯"))             // already in General
+    // Weapon-specific charms stay with every weapon that uses them.
+    for weapon in ["Gunlance", "Charge Blade"] { XCTAssertTrue(labels(weapon).contains("Tenderizer +6 / Artillery +10 ◯◯◯"), weapon) }
+    for weapon in ["Great Sword", "Long Sword"] { XCTAssertTrue(labels(weapon).contains("Sheathe Sharpen +10 / Critical Up +5 ◯◯◯"), weapon) }
+    for weapon in ["Light Bowgun", "Heavy Bowgun"] { XCTAssertTrue(labels(weapon).contains("Recoil +6 / Reload Spd +7 ◯◯◯"), weapon) }
+    XCTAssertEqual(labels("Hammer"), ["Tenderizer +6 / KO +10 ◯◯◯"])
   }
 
   func testCanRollRejectsImpossibleCharms() {
