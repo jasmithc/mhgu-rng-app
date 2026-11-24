@@ -54,12 +54,19 @@ Requires macOS 14+ and the Xcode command-line tools. `./build_app.sh --universal
 | Halcyon / Juju Meld | Charms a Halcyon or Juju meld gives | `halcyonpush()` / `jujupush()` |
 | Quest Charm Sequence | Run of quest-reward charms from a frame | `sequence_charm()` |
 | Slot & Fill Search | Charms with a given fill value and slot count | `search_fill_slot()` |
-| Item Combo Search | Find your RNG position from item combinations | `search_combo()` |
+| Item Combo Search | Find your RNG position from item combinations, with a [reliability and stutter check](#item-combo-search-checks) | `search_combo()` |
 | Quest Reward Search | Find your RNG position from quest rewards | `search_reward()` |
 | Raw RNG Dump | Raw RNG state values | `allpush()` |
 
 The toolbar picks the charm kind (Enduring, Timeworn, Shining or Mystery) and the language (English, 日本語, 中文).
 **Settings (⌘,)** holds whether to show rarity, whether to show aim points for every meld rank, and the quest charm count. Run a tool with ⌘↩ and stop it with Esc.
+
+### Item Combo Search checks
+
+After the search, Item Combo Search adds two checks that the original tool doesn't have:
+
+- **Reliability:** it shows how likely a random frame is to match your sequence, and warns if a chance match is likely in the range you searched. Short sequences over a large range can match a random far-away frame, so enter every value up to the 99, or search a narrower range around where you expect to be.
+- **Frame stutters:** holding Combine normally gives one combination every 5 frames, but the rhythm can slip by a frame near the start. Then even a correctly read sequence has no exact match. If that happens, the search looks for a match where the combinations before one point came 1–2 frames early or late. It reports the frame and where the stutter was. The frame is based on the steady part after the stutter and still counts every value, so don't delete values to force a match.
 
 ## Snipe Timer (right-side panel)
 

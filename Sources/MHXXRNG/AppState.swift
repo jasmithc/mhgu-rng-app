@@ -42,7 +42,7 @@ enum Tool: String, CaseIterable, Identifiable {
     case .melding: return "Show the charms a Halcyon or Juju meld gives at a frame (halcyonpush() / jujupush())."
     case .sequence: return "Show the run of quest-reward charms starting at a frame (sequence_charm())."
     case .fillSlot: return "Find charms with a given fill value and slot count (search_fill_slot())."
-    case .combo: return "Find your RNG position from item-combination results (search_combo())."
+    case .combo: return "Find your RNG position from item-combination results (search_combo()). Also shows how likely a chance match is, and if nothing matches exactly, checks for a 1–2 frame stutter in the combining rhythm."
     case .reward: return "Find your RNG position from a sequence of quest rewards (search_reward())."
     case .dump: return "Dump raw RNG state values (allpush())."
     }
@@ -208,7 +208,10 @@ enum OutputRenderer {
   static func render(_ out: Output) -> NSAttributedString {
     let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
     let bold = NSFont.monospacedSystemFont(ofSize: 12, weight: .semibold)
-    let base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.textColor]
+    // Wrapped continuation lines are indented a little so each output line's start stays clear.
+    let para = NSMutableParagraphStyle()
+    para.headIndent = 4 * ("0" as NSString).size(withAttributes: [.font: font]).width
+    let base: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.textColor, .paragraphStyle: para]
     let result = NSMutableAttributedString()
     for (i, line) in out.lines.enumerated() {
       if i > 0 { result.append(NSAttributedString(string: "\n", attributes: base)) }
