@@ -138,6 +138,46 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertFalse(mystery.canRoll(skill1: 1, points1: 1, skill2: 0, points2: 1, slots: 2))
   }
 
+  // MARK: Can the charm exist?
+
+  func reason(_ kind: CharmKind, _ a: Int?, _ pa: Int, _ b: Int?, _ pb: Int, slots: Int,
+              origin: Origin = .melding, atLeast: Bool = false) -> String? {
+    charmKindTables[kind.rawValue].impossibleReason(skill1: a, points1: pa, skill2: b, points2: pb, slots: slots,
+                                                    origin: origin, atLeast: atLeast, lang: languageTables[.en]!)
+  }
+
+  func testPossibleCharmsPass() {
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, 10, slots: 3))
+    XCTAssertNil(reason(.enduring, crisis, 4, recLevel, 2, slots: 0))
+    XCTAssertNil(reason(.enduring, chainCrit, 4, nil, 0, slots: 3))
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, -3, slots: 0, origin: .quest))  // quests can give negative points
+    XCTAssertNil(reason(.enduring, tenderizer, 6, expert, 10, slots: 3, atLeast: true))
+    XCTAssertNil(reason(.enduring, nil, 0, expert, 10, slots: 3, atLeast: true))
+  }
+
+  func testImpossibleCharmsExplainWhy() {
+    XCTAssertEqual(reason(.enduring, tenderizer, 7, expert, 10, slots: 3),
+                   "On Enduring Charms, Tenderizer in slot 1 ranges from +2 to +6.")
+    XCTAssertEqual(reason(.enduring, expert, 10, tenderizer, 5, slots: 3),
+                   "Expert can't be the first skill on Enduring Charms.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 6, expert, 11, slots: 3),
+                   "On Enduring Charms from melding, Expert in slot 2 ranges from +1 to +10.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 6, expert, -3, slots: 0),
+                   "On Enduring Charms from melding, Expert in slot 2 ranges from +1 to +10.")
+    XCTAssertEqual(reason(.enduring, tenderizer, 7, nil, 0, slots: 0, atLeast: true),
+                   "On Enduring Charms, Tenderizer in slot 1 ranges from +2 to +6.")
+  }
+
+  func testSlotLimits() {
+    // Paralysis (1) / Poison (0) on Mystery charms.
+    XCTAssertEqual(reason(.mystery, 1, 1, 0, 1, slots: 2),
+                   "Mystery Charms like this can have 0 or 1 slots with these points, not 2.")
+    // More points can mean fewer slots on Mystery charms, so "at least" checks every total.
+    XCTAssertNil(reason(.mystery, 1, 1, 0, 1, slots: 1, atLeast: true))
+    XCTAssertEqual(reason(.mystery, 1, 5, 0, 7, slots: 1, atLeast: true),
+                   "Mystery Charms like this can have 0 slots with at least these points, not 1 or more.")
+  }
+
   // MARK: RNG jump
 
   /// jump(n) uses polynomial arithmetic; it must agree with stepping the RNG one frame at a time.

@@ -106,16 +106,10 @@ public enum CharmPresets {
 }
 
 extension CharmTables {
-  /// Whether a charm with these skills, points and slots can be generated for this charm kind
-  /// (by melding): skill 1 and skill 2 must be in this kind's lists, the points within range,
-  /// and the slot count reachable for the charm's total points.
+  /// Whether a two-skill charm with these points and slots can come from melding for this kind.
+  /// (Presets never use the same skill twice.)
   public func canRoll(skill1 a: Int, points1 pa: Int, skill2 b: Int, points2 pb: Int, slots: Int) -> Bool {
-    guard a != b, let i1 = skill1.firstIndex(of: a), let i2 = skill2.firstIndex(of: b) else { return false }
-    let r1 = sp1[i1], max2 = sp2[i2].1
-    guard (r1.0...r1.1).contains(pa), (1...max2).contains(pb), (0...3).contains(slots) else { return false }
-    let fill = (pa * max2 + pb * r1.1) * 10 / (r1.1 * max2)
-    let v = slotValue[fill - 1]
-    let need = [0, v.0, v.1, v.2][slots]
-    return need <= 99
+    a != b && impossibleReason(skill1: a, points1: pa, skill2: b, points2: pb, slots: slots,
+                               origin: .melding, atLeast: false, lang: languageTables[.en]!) == nil
   }
 }

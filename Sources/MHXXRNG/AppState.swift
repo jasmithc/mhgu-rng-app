@@ -138,6 +138,14 @@ final class AppState: ObservableObject {
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
   }
 
+  /// Why the current Charm Search target can't exist, or nil if it can.
+  var searchProblem: String? {
+    let f = search
+    if f.skill1 == nil && f.skill2 == nil { return nil }   // handled when running
+    return tables.impossibleReason(skill1: f.skill1, points1: f.points1, skill2: f.skill2, points2: f.points2,
+                                   slots: f.slots, origin: f.origin, atLeast: f.mode == .atLeast, lang: lang)
+  }
+
   /// Fill in Charm Search from a preset: charm kind, skills, points and slots, as an exact
   /// melding search.
   func applyPreset(_ p: CharmPreset) {
