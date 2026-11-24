@@ -72,8 +72,11 @@ final class TimerPanel {
     correction = Prefs.double("timer.correction") ?? 0
     correctionInFrames = Prefs.string("timer.correctionUnit") == "frames"
     counterTarget = calc.neededWhole
+    trace("panel: building")
     build()
+    trace("panel: built")
     refresh()
+    trace("panel: refreshed")
   }
 
   // MARK: Building
@@ -159,7 +162,7 @@ final class TimerPanel {
     // Final Countdown
     _ = label("h.cd", "Final Countdown", font: UI.bold)
     line("line.cd")
-    _ = label("cd.waitLabel", "Wait time (from Frame → Wait Time)")
+    _ = label("cd.waitTitle", "Wait time (from Frame → Wait Time)")
     _ = input(C.wait, waitText, mono: true, align: ES.left)
     _ = label("cd.correctionLabel", "Correction")
     _ = input(C.correction, correction == 0 ? "0" : String(correction))
@@ -271,7 +274,7 @@ final class TimerPanel {
     y += UI.px(10)
 
     header("h.cd", "line.cd")
-    moveWindow(l["cd.waitLabel"]!, x0, y, cw, UI.px(18)); y += UI.px(20)
+    moveWindow(l["cd.waitTitle"]!, x0, y, cw, UI.px(18)); y += UI.px(20)
     moveWindow(c[C.wait]!, x0, y, cw, rowH); y += rowH + gap
     moveWindow(l["cd.correctionLabel"]!, x0, y + (rowH - UI.px(16)) / 2, UI.px(80), UI.px(18))
     moveWindow(c[C.correction]!, x0 + UI.px(82), y, UI.px(70), rowH)

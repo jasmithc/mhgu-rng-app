@@ -334,3 +334,21 @@ func tempDirectory() -> String {
   let n = Int(GetTempPathW(DWORD(buf.count), &buf))
   return String(decoding: buf[0..<n], as: UTF16.self)
 }
+
+// MARK: - Trace log (smoke test only)
+
+private var traceHandle: HANDLE?
+
+/// Start writing trace lines to `path` (each line is written straight to the file, so the log
+/// survives a crash).
+func openTrace(_ path: String) {
+  let GENERIC_WRITE: DWORD = 0x4000_0000, FILE_SHARE_READ: DWORD = 1, CREATE_ALWAYS: DWORD = 2
+  traceHandle = withWide(path) { CreateFileW($0, GENERIC_WRITE, FILE_SHARE_READ, nil, CREATE_ALWAYS, 0x80, nil) }
+}
+
+func trace(_ line: @autoclosure () -> String) {
+  guard let h = traceHandle else { return }
+  let bytes = Array((line() + "\r\n").utf8)
+  var written: DWORD = 0
+  _ = bytes.withUnsafeBytes { WriteFile(h, $0.baseAddress, DWORD($0.count), &written, nil) }
+}

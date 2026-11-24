@@ -111,13 +111,21 @@ final class App {
                         parent: nil, x: CW_USEDEFAULT, y: CW_USEDEFAULT, w: w, h: h)
     BeepScheduler.shared.notifyWindow = Int(bitPattern: main)
     buildMenu()
+    trace("start: did buildMenu()")
     buildSidebar()
+    trace("start: did buildSidebar()")
     buildForms()
+    trace("start: did buildForms()")
     buildOutput()
+    trace("start: did buildOutput()")
     panel = TimerPanel(parent: main, app: self)
+    trace("start: did panel = TimerPanel(parent: main, app: self)")
     refreshLanguage()
+    trace("start: did refreshLanguage()")
     selectTool(.search)
+    trace("start: did selectTool(.search)")
     updateTimerVisibility()
+    trace("start: did updateTimerVisibility()")
     updateRunState()
     layout()
     _ = ShowWindow(main, smokeDir == nil ? SW_SHOWNORMAL : SW_SHOW)
@@ -760,8 +768,10 @@ final class App {
 
   func jobDone(_ r: JobResult) {
     guard r.generation == generation else { return }   // an older, replaced run
+    trace("jobDone: \(r.rtf.count) bytes of RTF")
     isRunning = false
     setRTF(r.rtf)
+    trace("jobDone: RTF set")
     lastPlainText = r.plainText
     hasOutput = true
     status = (r.note ?? "Done") + " · \(r.title) · \(fixed(r.seconds, 2))s"
@@ -797,6 +807,9 @@ final class App {
   // MARK: - Window messages
 
   func handle(_ h: HWND, _ msg: UINT, _ wp: WPARAM, _ lp: LPARAM) -> LRESULT {
+    if msg == WM.command || msg >= WM.app || msg == WM.timer || msg == WM.destroy {
+      trace("msg \(msg) wp \(wp) lp \(lp) to \(h == main ? "main" : (panel != nil && h == panel.hwnd ? "panel" : "other"))")
+    }
     switch msg {
     case WM.command:
       if let s = settings, h == s.hwnd { s.command(lo(wp), hi(wp)); return 0 }
@@ -863,13 +876,17 @@ final class App {
       _ = SetTimer(main, 2, 1500, nil)
       return
     }
+    trace("smoke: \(t.title)")
     selectTool(t)
+    trace("smoke: selected")
     run()
+    trace("smoke: launched, status \(status)")
   }
 
   private func smokeStepDone() {
     smokeLog += "== \(tool.title) ==\n\(lastPlainText)\n-- \(status)\n\n"
-    if tool == .search { saveScreenshot(main, smokeDir! + "\\search.bmp") }
+    trace("smoke: done \(tool.title): \(status)")
+    if tool == .search { saveScreenshot(main, smokeDir! + "\\search.bmp"); trace("smoke: screenshot saved") }
     smokeQueue.removeFirst()
     smokeNext()
   }
@@ -877,10 +894,12 @@ final class App {
   private func smokeTimer(_ id: Int) {
     _ = KillTimer(main, UINT_PTR(id))
     guard id == 2, let dir = smokeDir else { return }
+    trace("smoke: timer screenshot")
     saveScreenshot(main, dir + "\\timer.bmp")
     smokeLog += "== Timer ==\n" + panel.describe() + "\n"
     panel.menuCommand(ID.menuCounter)
     panel.menuCommand(ID.menuStopwatch)
+    trace("smoke: writing log")
     writeFile(dir + "\\smoke.txt", Array(smokeLog.utf8))
     _ = DestroyWindow(main)
   }

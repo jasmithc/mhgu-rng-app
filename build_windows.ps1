@@ -146,10 +146,16 @@ if ($SmokeTest) {
   $savedPath = $env:Path
   $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"   # only what every Windows PC has
   try {
-    $p = Start-Process -FilePath $exe -ArgumentList '--smoke-test', "`"$out`"" -PassThru
+    $p = Start-Process -FilePath $exe -ArgumentList '--smoke-test', "`"$out`"" -PassThru `
+      -RedirectStandardError "$Work\smoke-stderr.txt" -RedirectStandardOutput "$Work\smoke-stdout.txt"
     $null = $p.Handle   # keeps the exit code available after the process ends
     if (-not $p.WaitForExit(600000)) { $p.Kill(); throw 'Smoke test timed out (a missing DLL shows a dialog and waits).' }
-    if ($p.ExitCode -ne 0) { throw "Smoke test exited with code $($p.ExitCode)" }
+    if ($p.ExitCode -ne 0) { throw ('Smoke test exited with code 0x{0:X8}' -f $p.ExitCode) }
+  } catch {
+    foreach ($f in "$out\trace.txt", "$Work\smoke-stderr.txt", "$Work\smoke-stdout.txt") {
+      if (Test-Path $f) { Write-Host "--- $f"; Get-Content $f -Encoding UTF8 | Select-Object -Last 60 | Write-Host }
+    }
+    throw
   } finally {
     $env:Path = $savedPath
   }

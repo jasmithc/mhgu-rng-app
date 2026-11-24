@@ -106,12 +106,18 @@ registerClass(settingsClassName, icon: nil, smallIcon: nil)
 
 var smokeDir: String?
 let args = CommandLine.arguments
-if let i = args.firstIndex(of: "--smoke-test"), i + 1 < args.count { smokeDir = args[i + 1] }
+if let i = args.firstIndex(of: "--smoke-test"), i + 1 < args.count {
+  smokeDir = args[i + 1]
+  openTrace(args[i + 1] + "\\trace.txt")
+  trace("start: dpi \(dpi), icons \(bigIcon != nil) \(smallIcon != nil)")
+}
 
 _ = BeepScheduler.shared   // open the audio output and start the scheduler thread now
+trace("audio ready")
 let app = App()
 theApp = app
 app.start(smokeDir: smokeDir)
+trace("window shown")
 
 // MARK: - Message loop
 
@@ -127,3 +133,4 @@ while ok(GetMessageW(&msg, nil, 0, 0)) {
   _ = TranslateMessage(&msg)
   _ = DispatchMessageW(&msg)
 }
+trace("message loop ended")
