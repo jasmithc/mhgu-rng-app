@@ -64,6 +64,9 @@ final class App {
   var textColors: [Int: COLORREF] = [:]
 
   var tool: Tool = .search
+  /// False while the window is being built: edit controls send change notifications as soon as
+  /// they're created, before the rest of the form exists.
+  var ready = false
   var presetList: [CharmPreset] = []
 
   // Settings (saved in the registry, same keys as the macOS app's defaults)
@@ -127,6 +130,7 @@ final class App {
     updateTimerVisibility()
     trace("start: did updateTimerVisibility()")
     updateRunState()
+    ready = true
     layout()
     _ = ShowWindow(main, smokeDir == nil ? SW_SHOWNORMAL : SW_SHOW)
     _ = UpdateWindow(main)
@@ -813,8 +817,8 @@ final class App {
     switch msg {
     case WM.command:
       if let s = settings, h == s.hwnd { s.command(lo(wp), hi(wp)); return 0 }
-      if let p = panel, h == p.hwnd { p.command(lo(wp), hi(wp)); return 0 }
-      if h == main { command(lo(wp), hi(wp)); return 0 }
+      if let p = panel, h == p.hwnd { if ready { p.command(lo(wp), hi(wp)) }; return 0 }
+      if h == main { if ready { command(lo(wp), hi(wp)) }; return 0 }
     case WM.ctlColorStatic:
       let control = Int(lp)
       if let color = textColors[control] {
