@@ -826,13 +826,14 @@ final class App {
       if let p = panel, h == p.hwnd { if ready { p.command(lo(wp), hi(wp)) }; return 0 }
       if h == main { if ready { command(lo(wp), hi(wp)) }; return 0 }
     case WM.ctlColorStatic:
-      let control = Int(lp)
-      if let color = textColors[control] {
-        let dc = HDC(bitPattern: UInt(wp))
-        _ = SetTextColor(dc, color)
-        _ = SetBkColor(dc, GetSysColor(COLOR_BTNFACE))
-        return handleToLRESULT(GetSysColorBrush(COLOR_BTNFACE))
-      }
+      // Labels paint a solid background (otherwise themed labels draw their text without
+      // clearing what was there, which leaves traces when they move or change).
+      let dc = HDC(bitPattern: UInt(wp))
+      if let color = textColors[Int(lp)] { _ = SetTextColor(dc, color) }
+      _ = SetBkColor(dc, GetSysColor(COLOR_BTNFACE))
+      return handleToLRESULT(GetSysColorBrush(COLOR_BTNFACE))
+    case 0x002B /* WM_DRAWITEM */:
+      if let p = panel, h == p.hwnd, p.drawItem(lp) { return 1 }
     case WM.size:
       if h == main { layout(); return 0 }
       if let p = panel, h == p.hwnd { p.layout(); return 0 }
@@ -906,6 +907,9 @@ final class App {
     guard id == 2, let dir = smokeDir else { return }
     trace("smoke: timer screenshot")
     saveScreenshot(main, dir + "\\timer.bmp")
+    // Scroll the timer panel a step at a time to the bottom (as the mouse wheel does) and check it.
+    for _ in 0..<20 { send(panel.hwnd, WM.vScroll, 1 /* SB_LINEDOWN */, 0) }
+    saveScreenshot(main, dir + "\\timer-scrolled.bmp")
     smokeLog += "== Timer ==\n" + panel.describe() + "\n"
     panel.menuCommand(ID.menuCounter)
     panel.menuCommand(ID.menuStopwatch)

@@ -50,7 +50,7 @@ final class TimerPanel {
   private var c: [Int: HWND] = [:]           // inputs and buttons by ID
   private var l: [String: HWND] = [:]        // labels by name
   private var cache: [Int: String] = [:]     // last text set on each label (avoids flicker)
-  private var colors: [Int: COLORREF] = [:]  // last colour per readout
+  private var liveStyle: [Int: (HFONT?, DWORD)] = [:]  // owner-drawn labels: font and alignment
   private var suppress = false               // ignore EN_CHANGE caused by our own SetWindowText
   private var scrollPos = 0
   private var contentHeight = 0
@@ -81,10 +81,15 @@ final class TimerPanel {
 
   // MARK: Building
 
+  /// A label. `live` labels change many times a second while a timer runs: they're drawn by
+  /// `drawItem` into an off-screen bitmap first, so they never flicker.
   private func label(_ name: String, _ text: String = "", font: HFONT? = UI.font, align: DWORD = SS.left,
-                     color: COLORREF? = nil) -> HWND {
-    let h = createWindow("STATIC", text, style: WS.child | WS.visible | align | SS.noPrefix, parent: hwnd)
+                     color: COLORREF? = nil, live: Bool = false) -> HWND {
+    let SS_OWNERDRAW: DWORD = 0x0D
+    let h = createWindow("STATIC", live ? "" : text, style: WS.child | WS.visible | (live ? SS_OWNERDRAW : align | SS.noPrefix),
+                         parent: hwnd)
     setFont(h, font)
+    if live { liveStyle[Int(bitPattern: h)] = (font, align) }
     if let color { app.textColors[Int(bitPattern: h)] = color }
     l[name] = h
     cache[Int(bitPattern: h)] = text
@@ -135,7 +140,7 @@ final class TimerPanel {
     // Continue Counter
     _ = label("h.counter", "Continue Counter", font: UI.bold)
     line("line.counter")
-    _ = label("counter.readout", "", font: UI.readout, align: SS.center)
+    _ = label("counter.readout", "", font: UI.readout, align: SS.center, live: true)
     _ = label("counter.targetLabel", "Target")
     _ = input(C.counterTarget, String(counterTarget))
     _ = button(C.counterStart, "Start")
@@ -153,7 +158,7 @@ final class TimerPanel {
     // Stopwatch
     _ = label("h.sw", "Stopwatch", font: UI.bold)
     line("line.sw")
-    _ = label("sw.readout", "", font: UI.readout, align: SS.center)
+    _ = label("sw.readout", "", font: UI.readout, align: SS.center, live: true)
     _ = button(C.swStart, "Start")
     _ = button(C.swReset, "Reset")
     _ = label("sw.hint", "Ctrl+Shift+S", font: UI.small, align: SS.right, color: TimerPanel.gray)
@@ -176,13 +181,13 @@ final class TimerPanel {
     _ = label("cd.correctionCaption", "+ waits longer, − shorter.", font: UI.small, color: TimerPanel.gray)
     for (name, text) in [("wait", "Wait time"), ("sw", "− Stopwatch"), ("corr", "+ Correction")] {
       _ = label("cd.\(name)Label", text, color: TimerPanel.gray)
-      _ = label("cd.\(name)", "", align: SS.right)
+      _ = label("cd.\(name)", "", align: SS.right, live: true)
     }
     line("line.cdSum")
     _ = label("cd.totalLabel", "= Countdown", font: UI.bold)
-    _ = label("cd.total", "", font: UI.bold, align: SS.right)
-    _ = label("cd.readout", "", font: UI.readout, align: SS.center)
-    _ = label("cd.frames", "", font: UI.small, align: SS.center, color: TimerPanel.gray)
+    _ = label("cd.total", "", font: UI.bold, align: SS.right, live: true)
+    _ = label("cd.readout", "", font: UI.readout, align: SS.center, live: true)
+    _ = label("cd.frames", "", font: UI.small, align: SS.center, color: TimerPanel.gray, live: true)
     _ = label("cd.error", "", font: UI.small, color: TimerPanel.red)
     _ = button(C.cdStart, "Start Countdown")
     _ = button(C.cdReset, "Reset")
@@ -193,7 +198,17 @@ final class TimerPanel {
 
   // MARK: Layout (with vertical scrolling when the window is short)
 
+  /// Re-position everything with drawing switched off, then repaint the panel once.
   func layout() {
+    let WM_SETREDRAW: UINT = 0x000B
+    send(hwnd, WM_SETREDRAW, 0)
+    place()
+    send(hwnd, WM_SETREDRAW, 1)
+    // RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_FRAME
+    _ = RedrawWindow(hwnd, nil, nil, 0x0001 | 0x0004 | 0x0080 | 0x0400)
+  }
+
+  private func place() {
     let (W, H) = clientSize(hwnd)
     let pad = UI.px(14)
     let x0 = pad, cw = W - 2 * pad
@@ -307,7 +322,7 @@ final class TimerPanel {
     info.nPos = Int32(scrollPos)
     _ = SetScrollInfo(hwnd, 1 /* SB_VERT */, &info, true)
     let maxPos = max(0, contentHeight - H)
-    if scrollPos > maxPos { scrollPos = maxPos; layout() }
+    if scrollPos > maxPos { scrollPos = maxPos; place() }
   }
 
   func scroll(_ msg: UINT, _ wp: WPARAM) {
@@ -330,9 +345,16 @@ final class TimerPanel {
     }
     pos = max(0, min(pos, max(0, contentHeight - H)))
     if pos != scrollPos {
+      // Let Windows move the controls and repaint only what scrolls into view.
+      let dy = scrollPos - pos
       scrollPos = pos
-      layout()
-      _ = InvalidateRect(hwnd, nil, true)
+      _ = ScrollWindowEx(hwnd, 0, Int32(dy), nil, nil, nil, nil, 0x1 | 0x2 | 0x4)   // SCROLLCHILDREN | INVALIDATE | ERASE
+      var info = SCROLLINFO()
+      info.cbSize = UINT(MemoryLayout<SCROLLINFO>.size)
+      info.fMask = 0x4   // SIF_POS
+      info.nPos = Int32(scrollPos)
+      _ = SetScrollInfo(hwnd, 1 /* SB_VERT */, &info, true)
+      _ = UpdateWindow(hwnd)
     }
   }
 
@@ -341,7 +363,9 @@ final class TimerPanel {
   private func set(_ name: String, _ text: String) {
     guard let h = l[name] else { return }
     let key = Int(bitPattern: h)
-    if cache[key] != text { cache[key] = text; setText(h, text) }
+    guard cache[key] != text else { return }
+    cache[key] = text
+    if liveStyle[key] != nil { _ = InvalidateRect(h, nil, false) } else { setText(h, text) }
   }
 
   private func setColor(_ name: String, _ color: COLORREF?) {
@@ -349,8 +373,33 @@ final class TimerPanel {
     let key = Int(bitPattern: h)
     if app.textColors[key] != color {
       app.textColors[key] = color
-      _ = InvalidateRect(h, nil, true)
+      _ = InvalidateRect(h, nil, liveStyle[key] == nil)
     }
+  }
+
+  /// WM_DRAWITEM for a live label: draw background and text off-screen, then copy it in one go.
+  func drawItem(_ lp: LPARAM) -> Bool {
+    guard let item = UnsafeMutablePointer<DRAWITEMSTRUCT>(bitPattern: Int(lp)),
+          let h = item.pointee.hwndItem, let style = liveStyle[Int(bitPattern: h)] else { return false }
+    let dc = item.pointee.hDC
+    let r = item.pointee.rcItem
+    let w = r.right - r.left, hgt = r.bottom - r.top
+    guard w > 0, hgt > 0, let mem = CreateCompatibleDC(dc), let bmp = CreateCompatibleBitmap(dc, w, hgt) else { return true }
+    defer { _ = DeleteDC(mem); _ = DeleteObject(UnsafeMutableRawPointer(bmp)) }
+    let oldBitmap = SelectObject(mem, UnsafeMutableRawPointer(bmp))
+    var local = RECT(left: 0, top: 0, right: w, bottom: hgt)
+    _ = FillRect(mem, &local, GetSysColorBrush(COLOR_BTNFACE))
+    let oldFont = SelectObject(mem, UnsafeMutableRawPointer(style.0))
+    _ = SetBkMode(mem, 1 /* TRANSPARENT */)
+    _ = SetTextColor(mem, app.textColors[Int(bitPattern: h)] ?? GetSysColor(COLOR_WINDOWTEXT))
+    let DT_CENTER: UINT = 1, DT_RIGHT: UINT = 2, DT_VCENTER: UINT = 4, DT_SINGLELINE: UINT = 0x20, DT_NOPREFIX: UINT = 0x800
+    let align = style.1 == SS.center ? DT_CENTER : (style.1 == SS.right ? DT_RIGHT : 0)
+    let text = cache[Int(bitPattern: h)] ?? ""
+    _ = withWide(text) { DrawTextW(mem, $0, -1, &local, align | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX) }
+    _ = BitBlt(dc, r.left, r.top, w, hgt, mem, 0, 0, 0x00CC_0020 /* SRCCOPY */)
+    _ = SelectObject(mem, oldFont)
+    _ = SelectObject(mem, oldBitmap)
+    return true
   }
 
   private func setInput(_ id: Int, _ text: String) {
