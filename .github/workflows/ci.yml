@@ -1,6 +1,7 @@
 # Builds and tests the shared engine (RNGCore + rngcheck) on macOS, Linux and Windows,
-# builds the macOS app on macOS, and checks the engine against the original Python
-# notebook from jasmithc/mhgu-rng with tools/compare.py.
+# builds the macOS app on macOS and the Windows app on Windows, and checks the engine
+# against the original Python notebook from jasmithc/mhgu-rng with tools/compare.py.
+# The Windows app is packaged, smoke-tested and uploaded as the "windows-app" artifact.
 #
 # Kept to as few dependencies as possible: Swift, Python and curl come preinstalled on
 # GitHub's macOS and Ubuntu runners. Windows runners have Python and curl but no Swift,
@@ -57,7 +58,7 @@ jobs:
           python3 tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
 
   windows:
-    name: Windows (engine)
+    name: Windows (engine + Windows app)
     runs-on: windows-latest
     defaults:
       run:
@@ -77,3 +78,29 @@ jobs:
         run: |
           curl -sSfL -o "$RUNNER_TEMP/mhxx-rng.ipynb" "$NOTEBOOK_URL"
           python tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
+      - name: Build, package and smoke-test the Windows app
+        shell: pwsh
+        run: ./build_windows.ps1 -SmokeTest
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-app
+          if-no-files-found: ignore
+          path: |
+            dist/*.zip
+            .build/windows-package/smoke/
+      - name: Print the smoke-test screenshots (base64 PNG)
+        if: always() && github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          foreach ($f in Get-ChildItem .build/windows-package/smoke/*.bmp -ErrorAction SilentlyContinue) {
+            $img = [System.Drawing.Image]::FromFile($f.FullName)
+            $png = "$($f.FullName).png"
+            $img.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
+            $img.Dispose()
+            $b = [Convert]::ToBase64String([IO.File]::ReadAllBytes($png))
+            Write-Host "BEGIN-PNG $($f.Name)"
+            for ($i = 0; $i -lt $b.Length; $i += 4000) { Write-Host $b.Substring($i, [Math]::Min(4000, $b.Length - $i)) }
+            Write-Host "END-PNG $($f.Name)"
+          }

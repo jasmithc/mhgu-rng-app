@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping! The app is macOS-only today, but the RNG engine is written to be shared, so a Windows or Linux version mainly needs a new front end.
+Thanks for helping! There are Mac, iPhone/iPad and Windows apps, and the RNG engine is written to be shared, so a Linux version mainly needs a new front end.
 
 ## How the code is split
 
@@ -12,8 +12,11 @@ Thanks for helping! The app is macOS-only today, but the RNG engine is written t
 | **SnipeKit**: the snipe timer model, precise beeps (AVFoundation) and timer panel, shared by both Apple apps | `Sources/SnipeKit` | macOS, iOS |
 | **The macOS app**: SwiftUI windows, tool forms, settings | `Sources/MHXXRNG` | macOS only |
 | **The iPhone/iPad app**: a Swift package app project, opened in Xcode | `ios/MHGUCharmsRNG.swiftpm` | iOS 17+ |
+| **The Windows app**: Win32 window, tool forms, coloured output (rich edit), snipe timer with waveOut beeps; no dependencies beyond RNGCore and the Windows SDK | `Sources/MHGUCharmsRNGWin` | Windows only |
 
-`Package.swift` only adds the macOS app target when building on a Mac, so `swift build` and `swift test` work on every platform.
+`Package.swift` only adds the macOS app target when building on a Mac and the Windows app target when building on Windows, so `swift build` and `swift test` work on every platform.
+
+On Windows, `build_windows.ps1` packages the app with the DLLs it needs, and `build_windows.ps1 -SmokeTest` runs the packaged app with `--smoke-test <folder>`: it runs every tool with its default inputs, starts the timers, saves the output (`smoke.txt`), a trace log and screenshots, then quits. CI does this on every push.
 
 ## Building and testing
 
@@ -32,13 +35,13 @@ python3 tools/compare.py path/to/mhxx-rng.ipynb
 
 [GitHub Actions](.github/workflows/ci.yml) runs all of this on macOS, Linux and Windows for every push and pull request.
 
-## Adding a Windows or Linux front end
+## Adding a Linux front end
 
 Build the new front end on top of `RNGCore` and keep platform-specific code out of the engine. A front end needs to:
 
 1. **Run the tools.** Create an `Output`, an `Engine(kind:options:out:)`, call a tool (for example `search`, `around`, `searchCombo`), then show `output.lines`. Each line is a list of segments, and a segment's `tint` marks rarity colours. `Sources/rngcheck/main.swift` is the smallest working example, and `Sources/MHXXRNG/Views.swift` shows how the Mac app builds each tool's inputs.
 2. **Run long searches off the UI thread.** The search loops check `Task.checkCancellation()`, so running them inside a `Task` gives you a working Stop button.
-3. **Recreate the snipe timer panel.** Use `ContinueCalc`, `SnipeMath.parseWaitTime`, `SnipeMath.clockString` and `countdownSeconds` from RNGCore for the maths. Only the clock, the beeps and keeping the computer awake need platform code. For reference, see `Sources/MHXXRNG/Beeps.swift` (beeps scheduled to the millisecond) and `SnipeTimers.swift`.
+3. **Recreate the snipe timer panel.** Use `ContinueCalc`, `SnipeMath.parseWaitTime`, `SnipeMath.clockString` and `countdownSeconds` from RNGCore for the maths. Only the clock, the beeps and keeping the computer awake need platform code. For reference, see `Sources/SnipeKit/Beeps.swift` and `SnipeTimers.swift` (Apple), or `Sources/MHGUCharmsRNGWin/Beeps.swift` and `TimerPanel.swift` (Windows).
 
 Pick whichever UI approach suits the platform. Options include a Swift UI library for that platform, a command-line or terminal UI built on `rngcheck`, or another language that calls a small C-compatible wrapper around RNGCore. Please open an issue first if you plan a large change, so the approach can be discussed.
 
