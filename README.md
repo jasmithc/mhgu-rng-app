@@ -15,7 +15,16 @@ This app is a Swift port of the RNG analysis tool from:
 
 For how charm generation and sniping work, step by step, read the guides in those repositories. Examples include [sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) and the [function reference](https://github.com/jasmithc/mhgu-rng/blob/main/docs/functions.md).
 
-New to charm sniping? [How to Charm Snipe in Monster Hunter Generations Ultimate!](https://www.youtube.com/watch?v=6aXJoX2hKOI) by Clobincole is a good video introduction to the process.
+## Further reading
+
+**Learning to snipe**
+- [How to Charm Snipe in Monster Hunter Generations Ultimate!](https://www.youtube.com/watch?v=6aXJoX2hKOI) (video, Clobincole): a good introduction to the whole process if you're new to charm sniping.
+- [Sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) (mhgu-rng docs): the method the *Item Combo Search* tool and the snipe timer are built around.
+
+**Choosing a charm to snipe**
+- [Charm Skill Tables](https://mhgu.kiranico.com/charms) (Kiranico): for each charm kind (Enduring, Timeworn, Shining, Mystery), which skills can roll in slot 1 and slot 2, with their point ranges. Check this before searching to see what's possible.
+- [MHGU Skill List](https://mhgu.kiranico.com/skill) (Kiranico) and [MHGU Skills](https://monsterhunterwiki.org/wiki/MHGU/Skills) (Monster Hunter Wiki): every skill tree, and how many points each skill needs.
+- [Athena's Armor Set Search for MHGU](https://monsterhunterwiki.org/wiki/Tools) (listed on the Monster Hunter Wiki's Tools page): a Windows armor set searcher. Add a charm you could snipe to see which builds it unlocks. It's a third-party program not affiliated with this project, so download it at your own discretion.
 
 ## Download
 
