@@ -16,10 +16,11 @@ final class SettingsWindow {
     hwnd = createWindow(settingsClassName, "Settings", style: WS.popup | WS.caption | WS.sysMenu,
                         ex: WS.exDlgModalFrame | WS.exControlParent, parent: app.main,
                         x: Int32(left), y: Int32(top), w: Int32(w), h: Int32(h))
-    let (cw, ch) = clientSize(hwnd)
+    let window = hwnd
+    let (cw, ch) = clientSize(window)
     let pad = UI.px(16)
     func make(_ cls: String, _ text: String, _ style: DWORD, id: Int = 0, ex: DWORD = 0) -> HWND {
-      let c = createWindow(cls, text, style: WS.child | WS.visible | style, ex: ex, parent: hwnd, id: id)
+      let c = createWindow(cls, text, style: WS.child | WS.visible | style, ex: ex, parent: window, id: id)
       setFont(c, UI.font)
       return c
     }
@@ -42,7 +43,7 @@ final class SettingsWindow {
     moveWindow(cancel, cw - pad - bw, ch - pad - bh, bw, bh)
 
     enable(app.main, false)
-    _ = ShowWindow(hwnd, SW_SHOW)
+    _ = ShowWindow(window, SW_SHOW)
     _ = SetFocus(showRare)
   }
 
