@@ -101,6 +101,43 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertEqual(Engine.twoDecimals(0.004), "0.00")
   }
 
+  // MARK: Charm presets
+
+  func testEveryPresetCanExist() {
+    for group in CharmPresets.groups {
+      XCTAssertFalse(group.presets.isEmpty, group.name)
+      for p in group.presets {
+        let t = charmKindTables[p.kind.rawValue]
+        XCTAssertTrue(t.canRoll(skill1: p.skill1, points1: p.points1, skill2: p.skill2, points2: p.points2, slots: p.slots),
+                      "\(group.name): \(p.label(languageTables[.en]!)) can't exist")
+      }
+    }
+  }
+
+  func testPresetLabelsAndElements() {
+    let en = languageTables[.en]!
+    let general = CharmPresets.groups.first { $0.name == "General Blademaster" }!
+    XCTAssertEqual(general.presets.first?.label(en), "Tenderizer +6 / Expert +10 ◯◯◯")
+    let sns = CharmPresets.groups.first { $0.name == "Sword & Shield / Dual Blades" }!.presets.map { $0.label(en) }
+    for element in ["Fire Atk", "Water Atk", "Thunder Atk", "Ice Atk", "Dragon Atk"] {
+      XCTAssertTrue(sns.contains("Elemental +7 / \(element) +13 ◯◯◯"), element)
+    }
+    XCTAssertEqual(CharmPresets.groups.reduce(0) { $0 + $1.presets.count }, 101)
+  }
+
+  func testCanRollRejectsImpossibleCharms() {
+    let t = charmKindTables[CharmKind.enduring.rawValue]
+    XCTAssertTrue(t.canRoll(skill1: tenderizer, points1: 6, skill2: expert, points2: 10, slots: 3))
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 7, skill2: expert, points2: 10, slots: 3))  // over max
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 6, skill2: expert, points2: 11, slots: 3))
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 6, skill2: tenderizer, points2: 5, slots: 3)) // same skill
+    XCTAssertFalse(t.canRoll(skill1: tenderizer, points1: 1, skill2: expert, points2: 1, slots: 3))  // below Tenderizer's minimum of 2
+    // Slot limits: a low-point Mystery charm (Paralysis +1 / Poison +1) can have 1 slot but not 2.
+    let mystery = charmKindTables[CharmKind.mystery.rawValue]
+    XCTAssertTrue(mystery.canRoll(skill1: 1, points1: 1, skill2: 0, points2: 1, slots: 1))
+    XCTAssertFalse(mystery.canRoll(skill1: 1, points1: 1, skill2: 0, points2: 1, slots: 2))
+  }
+
   // MARK: RNG jump
 
   /// jump(n) uses polynomial arithmetic; it must agree with stepping the RNG one frame at a time.

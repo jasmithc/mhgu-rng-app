@@ -128,6 +128,21 @@ struct ToolForm: View {
   @ViewBuilder var fields: some View {
     switch tool {
     case .search:
+      LabeledContent("Presets") {
+        Menu {
+          ForEach(CharmPresets.groups, id: \.name) { group in
+            Menu(group.name) {
+              ForEach(group.presets, id: \.self) { p in
+                Button(p.label(state.lang)) { state.applyPreset(p) }
+              }
+            }
+          }
+        } label: {
+          Label("God charms", systemImage: "star")
+        }
+        .fixedSize()
+        .help("Fill in the search with a top 3-slot Enduring charm for your weapon")
+      }
       Picker("Match", selection: $state.search.mode) {
         ForEach(SearchMode.allCases) { Text($0.rawValue).tag($0) }
       }

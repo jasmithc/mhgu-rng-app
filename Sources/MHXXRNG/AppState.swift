@@ -138,6 +138,20 @@ final class AppState: ObservableObject {
       .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
   }
 
+  /// Fill in Charm Search from a preset: charm kind, skills, points and slots, as an exact
+  /// melding search.
+  func applyPreset(_ p: CharmPreset) {
+    kind = p.kind
+    search.mode = .exact
+    search.origin = .melding
+    search.skill1 = p.skill1
+    search.points1 = p.points1
+    search.skill2 = p.skill2
+    search.points2 = p.points2
+    search.slots = p.slots
+    status = "Preset: \(p.label(lang)) (\(kindName(p.kind)))"
+  }
+
   /// Clear skill choices that the newly selected charm kind can't roll.
   func kindChanged() {
     if let s = search.skill1, !tables.skill1.contains(s) { search.skill1 = nil }
