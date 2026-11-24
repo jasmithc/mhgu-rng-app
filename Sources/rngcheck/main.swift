@@ -46,6 +46,9 @@ do {
   case "allpush": try e.allPush(frame: i(0), count: i(1), showAll: a[2] == "1")
   case "watch": out.print(frameTime(i(0)))
   case "combo": try e.searchCombo(start: i(0), step: i(1), combo: a[2])
+  case "combocheck":
+    try e.searchCombo(start: i(0), step: i(1), combo: a[2])
+    try e.checkCombo(start: i(0), step: i(1), combo: a[2])
   case "reward":
     let table = a[3].split(separator: " ").map { p -> (String, Int) in
       let kv = p.split(separator: ":"); return (String(kv[0]), Int(kv[1])!)

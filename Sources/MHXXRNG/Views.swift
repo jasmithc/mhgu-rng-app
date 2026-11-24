@@ -246,7 +246,10 @@ struct ToolForm: View {
       }
     case .combo:
       let f = state.combo
-      state.run("combo search") { e in try e.searchCombo(start: f.start, step: f.count, combo: f.text) }
+      state.run("combo search") { e in
+        try e.searchCombo(start: f.start, step: f.count, combo: f.text)
+        try e.checkCombo(start: f.start, step: f.count, combo: f.text)
+      }
     case .reward:
       let f = state.reward
       state.run("reward search") { e in

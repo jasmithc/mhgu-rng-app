@@ -55,6 +55,52 @@ final class RNGCoreTests: XCTestCase {
     XCTAssertTrue(out.plainText.contains("found! frame is… 1741"), out.plainText)
   }
 
+  // MARK: Combo reliability and stutter check
+
+  /// A real recording: the 4th value really was 07, but the combinations up to value #5
+  /// came one frame early, so there's no exact match. The stutter check finds frame 98781.
+  let recordedCombo = "00 02 04 07 10 14 17 20 23 26 29 32 35 38 40 43 45 48 50 54 57 60 63 66 69 72 75 78 82 86 88 92 95 98 99"
+
+  func testComboStutterFindsRecordedPosition() throws {
+    let out = Output()
+    var e = engine(.enduring, out)
+    try e.searchCombo(start: 0, step: 200_000, combo: recordedCombo)
+    XCTAssertTrue(out.plainText.contains("no results found"))
+    let matches = try e.checkCombo(start: 0, step: 200_000, combo: recordedCombo)
+    XCTAssertEqual(matches, [ComboMatch(frame: 98_781, shift: -1, steadyFromValue: 6)])
+    XCTAssertTrue(out.plainText.contains("came 1 frame early"), out.plainText)
+    XCTAssertFalse(out.plainText.contains("Warning"), out.plainText)
+  }
+
+  func testComboWarnsWhenAChanceMatchIsLikely() throws {
+    // The first 22 values match frame 5131615 purely by chance.
+    let short = "00 02 04 07 10 14 17 20 23 26 29 32 35 38 40 43 45 48 50 54 57 60"
+    let out = Output()
+    var e = engine(.enduring, out)
+    let matches = try e.checkCombo(start: 4_500_000, step: 1_000_000, combo: short)
+    XCTAssertEqual(matches.map(\.frame), [5_131_615])
+    XCTAssertEqual(matches.first?.shift, 0)
+    XCTAssertTrue(out.plainText.contains("1 in 8,388,608"), out.plainText)
+    XCTAssertTrue(out.plainText.contains("Warning"), out.plainText)
+  }
+
+  func testComboExactMatchIsReportedAsReliable() throws {
+    let out = Output()
+    var e = engine(.enduring, out)
+    let combo = "00 03 06 09 11 13 16 18 21 23 25 27 30 32 35 38 41 44 47 50 52 55 58 61 65 69 72 75 78 81 85 88 91 93 97 99"
+    let matches = try e.checkCombo(start: 0, step: 100_000, combo: combo)
+    XCTAssertEqual(matches, [ComboMatch(frame: 1741, shift: 0, steadyFromValue: 4)])
+    XCTAssertTrue(out.plainText.contains("Reliability"))
+    XCTAssertFalse(out.plainText.contains("Warning"))
+  }
+
+  func testNumberFormatting() {
+    XCTAssertEqual(Engine.grouped(10_000_000), "10,000,000")
+    XCTAssertEqual(Engine.grouped(999), "999")
+    XCTAssertEqual(Engine.twoDecimals(1.192), "1.19")
+    XCTAssertEqual(Engine.twoDecimals(0.004), "0.00")
+  }
+
   // MARK: RNG jump
 
   /// jump(n) uses polynomial arithmetic; it must agree with stepping the RNG one frame at a time.
