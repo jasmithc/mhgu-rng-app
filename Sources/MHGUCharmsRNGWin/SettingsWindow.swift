@@ -12,10 +12,10 @@ final class SettingsWindow {
     // Centre over the main window.
     var r = RECT()
     _ = GetWindowRect(app.main, &r)
-    let x = Int(r.left) + (Int(r.right - r.left) - w) / 2, y = Int(r.top) + (Int(r.bottom - r.top) - h) / 2
+    let left = Int(r.left) + (Int(r.right - r.left) - w) / 2, top = Int(r.top) + (Int(r.bottom - r.top) - h) / 2
     hwnd = createWindow(settingsClassName, "Settings", style: WS.popup | WS.caption | WS.sysMenu,
                         ex: WS.exDlgModalFrame | WS.exControlParent, parent: app.main,
-                        x: Int32(x), y: Int32(y), w: Int32(w), h: Int32(h))
+                        x: Int32(left), y: Int32(top), w: Int32(w), h: Int32(h))
     let (cw, ch) = clientSize(hwnd)
     let pad = UI.px(16)
     func make(_ cls: String, _ text: String, _ style: DWORD, id: Int = 0, ex: DWORD = 0) -> HWND {
