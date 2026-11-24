@@ -1,6 +1,6 @@
 # MHGU Charms RNG
 
-A native macOS app for charm RNG sniping in Monster Hunter Generations Ultimate (MHXX). It finds the frame a charm appears on, converts it to a wait time, and includes timers for the continue-cycle and final countdown steps. No Python, Colab or Jupyter needed.
+A native macOS and Windows app for charm RNG sniping in Monster Hunter Generations Ultimate (MHXX). It finds the frame a charm appears on, converts it to a wait time, and includes timers for the continue-cycle and final countdown steps. No Python, Colab or Jupyter needed.
 
 <img width="1548" height="1072" alt="The MHGU Charms RNG window: the Charm Search tool on the left, and the Snipe Timer panel on the right with the Continue Cycles calculator, continue counter, stopwatch and final countdown" src="docs/images/app-window.png" />
 
@@ -26,7 +26,7 @@ For how charm generation and sniping work, step by step, read the guides in thos
 - [MHGU Skill List](https://mhgu.kiranico.com/skill) (Kiranico) and [MHGU Skills](https://monsterhunterwiki.org/wiki/MHGU/Skills) (Monster Hunter Wiki): every skill tree, and how many points each skill needs.
 - [Athena's Armor Set Search for MHGU](https://monsterhunterwiki.org/wiki/Tools) (listed on the Monster Hunter Wiki's Tools page): a Windows armor set searcher. Add a charm you could snipe to see which builds it unlocks. It's a third-party program not affiliated with this project, so download it at your own discretion.
 
-## Download
+## Download for Mac
 
 1. Download `MHGU-Charms-RNG-<version>-macOS.zip` from the [latest release](https://github.com/jasmithc/mhgu-rng-app/releases/latest). It runs on Apple Silicon and Intel Macs with macOS 14 or later.
 2. Double-click the zip to unpack it, then drag **MHGU Charms RNG** into your Applications folder.
@@ -35,7 +35,17 @@ For how charm generation and sniping work, step by step, read the guides in thos
    - Go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to "MHGU Charms RNG".
    - Confirm, and after that it opens normally.
 
+## Download for Windows
+
+1. Download `MHGU-Charms-RNG-<version>-Windows.zip` from the [latest release](https://github.com/jasmithc/mhgu-rng-app/releases/latest). It runs on 64-bit Windows 10 and 11 (Windows on Arm runs it through emulation).
+2. Right-click the zip, choose **Extract All…**, and keep the extracted **MHGU Charms RNG** folder together: the `.dll` files next to the app are the Swift runtime it needs. No installer and nothing else to install.
+3. Open **MHGU Charms RNG.exe**. The first time, Windows SmartScreen may say it "protected your PC", because the app isn't code-signed. Click **More info**, then **Run anyway**.
+
+The Windows app has the same tools, God charm presets and snipe timer as the Mac app. Keyboard shortcuts: **Ctrl+Enter** runs the tool and **Esc** stops it. The timer shortcuts are **Ctrl+Alt+T** (show or hide the timer panel), **Ctrl+Alt+P** (Poogie), **Ctrl+Alt+C** (continue counter), **Ctrl+Shift+S** (stopwatch) and **Ctrl+Shift+Enter** (countdown). Settings are kept in the registry under `HKEY_CURRENT_USER\Software\MHGU Charms RNG`.
+
 ## Build from source
+
+### macOS
 
 ```bash
 ./build_app.sh
@@ -43,6 +53,17 @@ open "dist/MHGU Charms RNG.app"
 ```
 
 Requires macOS 14+ and the Xcode command-line tools. `./build_app.sh --universal` builds for both Apple Silicon and Intel and also makes the release zip.
+
+### Windows
+
+Install the [Swift toolchain for Windows](https://www.swift.org/install/windows/) (6.1 or later), then in PowerShell:
+
+```powershell
+.\build_windows.ps1
+& "dist\MHGU Charms RNG\MHGU Charms RNG.exe"
+```
+
+This builds the app, copies in the DLLs it needs and makes the release zip in `dist\`. `-SmokeTest` also runs the packaged app once through every tool, as CI does. The [Windows release workflow](.github/workflows/release-windows.yml) builds the zip and attaches it to a GitHub release when the release is published (or when run by hand).
 
 ## iPhone and iPad
 
@@ -136,10 +157,11 @@ The app uses one name for each skill, whichever slot it's in. Two changes from m
 
 ## Development
 
-Want to help, or build a Windows or Linux version? See [CONTRIBUTING.md](CONTRIBUTING.md). The engine already builds and passes its tests on macOS, Linux and Windows.
+Want to help, or build a Linux version? See [CONTRIBUTING.md](CONTRIBUTING.md). The engine already builds and passes its tests on macOS, Linux and Windows.
 
 - `Sources/RNGCore`: Swift port of the original notebook's RNG and charm logic, plus the snipe-timer maths. Cross-platform.
 - `Sources/MHXXRNG`: the SwiftUI app (macOS only).
+- `Sources/MHGUCharmsRNGWin`: the Windows app (Win32, Windows only).
 - `Sources/rngcheck`: command-line harness used by `tools/compare.py`.
 - `Tests/RNGCoreTests`: unit tests, run with `swift test`.
 
