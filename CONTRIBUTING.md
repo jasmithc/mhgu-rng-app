@@ -6,8 +6,8 @@ Thanks for helping! The app is macOS-only today, but the RNG engine is written t
 
 | Part | Path | Platforms |
 |---|---|---|
-| **RNGCore**: the RNG, charm generation, every search tool, and the snipe-timer maths (`ContinueCalc`, wait-time parsing, countdown) | `Sources/RNGCore` | macOS, Linux, Windows |
-| **rngcheck**: command-line harness that runs any engine function and prints its output | `Sources/rngcheck` | macOS, Linux, Windows |
+| **RNGCore**: the RNG, charm generation, every search tool, and the snipe-timer maths (`ContinueCalc`, wait-time parsing, countdown). Swift standard library only. | `Sources/RNGCore` | macOS, Linux, Windows |
+| **rngcheck**: command-line harness that runs any engine function and prints its output (standard library only) | `Sources/rngcheck` | macOS, Linux, Windows |
 | **Unit tests** | `Tests/RNGCoreTests` | macOS, Linux, Windows |
 | **The macOS app**: SwiftUI windows, the timer panel, beeps (AVFoundation), settings | `Sources/MHXXRNG` | macOS only |
 
@@ -15,14 +15,14 @@ Thanks for helping! The app is macOS-only today, but the RNG engine is written t
 
 ## Building and testing
 
-You need a [Swift toolchain](https://www.swift.org/install/) (5.9 or later; CI uses 6.1). It comes with Xcode on macOS.
+You need a [Swift toolchain](https://www.swift.org/install/) (5.9 or later). It comes with Xcode on macOS. CI uses the Swift that's preinstalled on GitHub's macOS and Ubuntu runners, and Swift 6.1 on Windows.
 
 ```bash
 swift build -c release   # engine + rngcheck (+ the app on macOS)
 swift test               # unit tests
 ```
 
-To check the engine against the original Python notebook, get `mhxx-rng.ipynb` from [jasmithc/mhgu-rng](https://github.com/jasmithc/mhgu-rng) and run (needs Python 3, no extra packages):
+To check the engine against the original Python notebook, get `mhxx-rng.ipynb` from [jasmithc/mhgu-rng](https://github.com/jasmithc/mhgu-rng) and run it (needs Python 3 only, no packages to install):
 
 ```bash
 python3 tools/compare.py path/to/mhxx-rng.ipynb
@@ -42,7 +42,7 @@ Pick whichever UI approach suits the platform. Options include a Swift UI librar
 
 ## Guidelines
 
-- **Keep RNGCore portable:** use only the Swift standard library and Foundation, with no AppKit, SwiftUI or other Apple-only frameworks.
+- **Keep RNGCore dependency-free:** it uses only the Swift standard library (not even Foundation), so it builds anywhere Swift does. Put platform code such as UI, sound, files and settings in the front end.
 - **Engine changes must keep matching the notebook.** Run `swift test` and `tools/compare.py` before opening a pull request.
 - **Don't edit `Sources/RNGCore/Tables.swift` by hand.** It's generated from the notebook with `python3 tools/gen_tables.py path/to/mhxx-rng.ipynb`.
 - By contributing, you agree that your work is released under the project's [MIT License](LICENSE).

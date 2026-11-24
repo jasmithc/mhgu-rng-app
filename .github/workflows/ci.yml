@@ -1,6 +1,11 @@
 # Builds and tests the shared engine (RNGCore + rngcheck) on macOS, Linux and Windows,
 # builds the macOS app on macOS, and checks the engine against the original Python
 # notebook from jasmithc/mhgu-rng with tools/compare.py.
+#
+# Kept to as few dependencies as possible: Swift, Python and curl come preinstalled on
+# GitHub's macOS and Ubuntu runners. Windows runners have Python and curl but no Swift,
+# so that job installs the official toolchain with compnerd/gha-setup-swift (maintained
+# by the Swift-on-Windows developers), pinned to an exact commit.
 name: CI
 
 on:
@@ -21,10 +26,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - run: swift --version
+      - run: swift --version && python3 --version
       - name: Build (engine, rngcheck and the macOS app)
         run: swift build -c release
       - name: Unit tests
@@ -32,27 +34,24 @@ jobs:
       - name: Compare with the Python notebook
         run: |
           curl -sSfL -o "$RUNNER_TEMP/mhxx-rng.ipynb" "$NOTEBOOK_URL"
-          python tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
+          python3 tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
       - name: Build the .app bundle
         run: ./build_app.sh
 
   linux:
     name: Linux (engine)
     runs-on: ubuntu-latest
-    container: swift:6.1
     steps:
       - uses: actions/checkout@v7
-      - name: Install Python
-        run: apt-get update -qq && apt-get install -y -qq python3 curl > /dev/null
-      - run: swift --version
+      - run: swift --version && python3 --version
       - name: Build (engine and rngcheck)
         run: swift build -c release
       - name: Unit tests
         run: swift test
       - name: Compare with the Python notebook
         run: |
-          curl -sSfL -o /tmp/mhxx-rng.ipynb "$NOTEBOOK_URL"
-          python3 tools/compare.py /tmp/mhxx-rng.ipynb
+          curl -sSfL -o "$RUNNER_TEMP/mhxx-rng.ipynb" "$NOTEBOOK_URL"
+          python3 tools/compare.py "$RUNNER_TEMP/mhxx-rng.ipynb"
 
   windows:
     name: Windows (engine)
@@ -62,14 +61,11 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7
-      - uses: compnerd/gha-setup-swift@v0.5.1
+      - uses: compnerd/gha-setup-swift@9ff1ee4c44888c5817fc14d1b257ac8cabb4935f # v0.5.1
         with:
           swift-version: swift-6.1-release
           swift-build: 6.1-RELEASE
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - run: swift --version
+      - run: swift --version && python --version
       - name: Build (engine and rngcheck)
         run: swift build -c release
       - name: Unit tests

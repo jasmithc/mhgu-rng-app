@@ -186,6 +186,11 @@ final class AppState: ObservableObject {
   }
 }
 
+/// RNGCore is Foundation-free, so give its error type a localized description here.
+extension RNGError: LocalizedError {
+  public var errorDescription: String? { message }
+}
+
 enum OutputRenderer {
   static func color(for tint: Tint) -> NSColor {
     switch tint {

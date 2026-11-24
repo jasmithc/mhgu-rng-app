@@ -1,5 +1,3 @@
-import Foundation
-
 public struct CharmTables {
   public let skill1: [Int]
   public let sp1: [(Int, Int)]
@@ -83,10 +81,13 @@ public struct SearchParams {
   public var len2: Int
 }
 
-public struct RNGError: LocalizedError {
+/// An input problem reported by a tool (for example an unknown skill or reward name).
+/// RNGCore uses only the Swift standard library, so this is a plain `Error`;
+/// front ends that use Foundation can add `LocalizedError` (the macOS app does).
+public struct RNGError: Error, CustomStringConvertible, Sendable {
   public let message: String
   public init(_ message: String) { self.message = message }
-  public var errorDescription: String? { message }
+  public var description: String { message }
 }
 
 // MARK: - Output

@@ -1,5 +1,3 @@
-import Foundation
-
 /// Initial xorshift128 state (`s` in the notebook).
 let seedState: (UInt32, UInt32, UInt32, UInt32) = (0x0194FD72, 0x79E6C985, 0x08DD9701, 0x41CFCE91)
 
