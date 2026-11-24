@@ -96,7 +96,7 @@ Show or hide the panel with the timer button in the toolbar (⌥⌘T). Every con
   - It beeps on each of the last 10 seconds, then plays a long beep at zero.
 
   <p align="center">
-    <img width="341" height="333" alt="Final Countdown section: wait time 0d 0h 3m 38s 18f, correction −16 frames, countdown 0:03:38.06 with a Start Countdown button" src="https://github.com/user-attachments/assets/4175b34b-4174-48c2-9792-76af64aff648" />
+    <img width="341" height="333" alt="Final Countdown section: wait time 0d 0h 3m 38s 18f, correction −16 frames, countdown 0:03:38.06 with a Start Countdown button" src="docs/images/final-countdown.png" />
   </p>
 
 ## English skill names
