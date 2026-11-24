@@ -40,7 +40,7 @@ jobs:
         run: ./build_app.sh
       - name: Build the iPhone/iPad app (Simulator, unsigned)
         working-directory: ios/MHGUCharmsRNG.swiftpm
-        run: xcodebuild -scheme MHGUCharmsRNG -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build -quiet
+        run: xcodebuild -scheme 'MHGU Charms RNG' -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build -quiet
 
   linux:
     name: Linux (engine)
