@@ -4,6 +4,9 @@ A native macOS and Windows app for charm RNG sniping in Monster Hunter Generatio
 
 <img width="1548" height="1072" alt="The MHGU Charms RNG window: the Charm Search tool on the left, and the Snipe Timer panel on the right with the Continue Cycles calculator, continue counter, stopwatch and final countdown" src="docs/images/app-window.png" />
 
+After playing the game for 7 years and having no luck, it took me only 7 attempts to get my god charm.
+
+<img width="1280" height="720" alt="59BCE6A2-19F3-49E9-B4B1-3962E534F76E" src="https://github.com/user-attachments/assets/83f1bead-71bc-47bf-9784-addf1f681baf" />
 
 
 ## Based on
