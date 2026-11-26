@@ -51,3 +51,5 @@ Pick whichever UI approach suits the platform. Options include a Swift UI librar
 - **Engine changes must keep matching the notebook.** Run `swift test` and `tools/compare.py` before opening a pull request.
 - **Don't edit `Sources/RNGCore/Tables.swift` by hand.** It's generated from the notebook with `python3 tools/gen_tables.py path/to/mhxx-rng.ipynb`.
 - By contributing, you agree that your work is released under the project's [MIT License](LICENSE).
+
+**iPhone project manifest:** Xcode owns `ios/MHGUCharmsRNG.swiftpm/Package.swift` and rewrites it whenever you change the app's settings in Xcode. Choosing your Personal Team adds a `teamIdentifier:` line; don't commit it. To keep it out of `git status`, run `git update-index --skip-worktree ios/MHGUCharmsRNG.swiftpm/Package.swift` (undo with `--no-skip-worktree` before pulling or committing changes to that file).
