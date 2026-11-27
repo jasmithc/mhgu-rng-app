@@ -13,6 +13,14 @@ After playing the game for 7 years and having no luck, it took me only 7 attempt
 </p>
 
 
+## Guides
+
+Step-by-step charm sniping guides for MHGU Charms RNG, including game preparation, Continue Cycles, item combinations, timer synchronisation, the Poogie safety buffer and retrying without wasting materials.
+
+- [English](docs/guides/charm-sniping-en.md)
+- [Português (Brasil)](docs/guides/charm-sniping-pt-BR.md)
+- [Español](docs/guides/charm-sniping-es.md)
+
 ## Based on
 
 This app is a Swift port of the RNG analysis tool from:
@@ -20,7 +28,7 @@ This app is a Swift port of the RNG analysis tool from:
 - **[apmnnn/mhxx-rng](https://github.com/apmnnn/mhxx-rng)**: the original MHXX RNG research and Python notebook (MIT License). All of the RNG and charm-generation logic comes from this project.
 - **[jasmithc/mhgu-rng](https://github.com/jasmithc/mhgu-rng)**: the English translation of mhxx-rng, including the documentation and English skill names.
 
-For how charm generation and sniping work, step by step, read the guides in those repositories. Examples include [sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) and the [function reference](https://github.com/jasmithc/mhgu-rng/blob/main/docs/functions.md).
+For more background on charm generation and sniping, read the guides in those repositories. Examples include [sniping using item combinations](https://github.com/jasmithc/mhgu-rng/blob/main/docs/combo_snipe.md) and the [function reference](https://github.com/jasmithc/mhgu-rng/blob/main/docs/functions.md).
 
 ## Further reading
 
