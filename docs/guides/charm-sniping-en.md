@@ -18,7 +18,7 @@ The instructions below use the English interface labels. Keep **Language** set t
 
 - Remove accompanying Palicos and set your Room Service attendant to the Moga Village receptionist.
 - Carry Combo Book 1, 99 Huskberries and 99 Needleberries. Ensure the Normal S Lv2 recipe has a 100% success rate and that you have no Normal S Lv2 in your pouch.
-- For Enduring Charms, unlock Juju Melding and bring three disposable rarity 5–7 charms (Queen, King or Dragon). This gives Rank 4.
+- For Enduring Charms, unlock Juju Melding and bring **three King Talismans (dark blue, rarity 6)** that you do not mind using for melding. This is my recommended combination and gives Rank 4. Queen and Dragon Talismans also qualify, but I recommend using three King Talismans.
 - Make sure the Switch album has room for a 30-second video.
 - Save in Kokoto Village with everything prepared. This is the save you will reload between unsuccessful attempts.
 
@@ -123,7 +123,7 @@ Do not subtract the Stopwatch yourself. Initially use a correction of 0. If the 
 1. While the game is still suspended, check the **Final Countdown** values.
 2. **Resume MHGU and press Start Countdown at exactly the same moment.**
 3. Walk to Room Service. Do not run.
-4. Select Juju Melding for Enduring Charms and select the three rarity 5–7 charms.
+4. Select Juju Melding for Enduring Charms and select the three King Talismans (dark blue).
 5. Proceed to the final confirmation, but do not submit the charms yet.
 6. The app beeps every second during the last ten seconds and plays a long beep at zero. **Confirm the meld on that final beep.**
 
@@ -142,7 +142,7 @@ Not saving an unsuccessful attempt preserves your combination materials and the 
 
 ## 11. Adjust the timing
 
-Use **Around a Frame** with the target frame, the correct charm kind and **Source: Melding** to inspect nearby charms. **Halcyon / Juju Meld** lets you inspect the full predicted result for a particular submission frame; use Juju and Rank 4 for three rarity 5–7 charms.
+Use **Around a Frame** with the target frame, the correct charm kind and **Source: Melding** to inspect nearby charms. **Halcyon / Juju Meld** lets you inspect the full predicted result for a particular submission frame; use Juju and Rank 4 for the recommended three King Talismans.
 
 Compare the predicted charms with your actual results. If you identify that you confirmed 15 frames too late, enter **−15 frames** (or −0.5 seconds) in **Correction** for the next attempt. If you were early, use a positive correction. A positive correction waits longer; a negative one waits less.
 
