@@ -18,7 +18,7 @@ Esta guía utiliza los nombres de botones y objetos en inglés. Mantén **Langua
 
 - Retira los camaradas Palico que te acompañan y selecciona a la recepcionista de la aldea Moga para el servicio de habitación (Room Service).
 - Lleva Combo Book 1, 99 Huskberries y 99 Needleberries. Asegúrate de que la receta de Normal S Lv2 tenga un 100 % de probabilidad de éxito y de no llevar munición Normal S Lv2 en la bolsa.
-- Para Enduring Charms, desbloquea Juju Melding y lleva tres talismanes prescindibles de rareza 5–7 (Queen, King o Dragon). Esto corresponde al Rank 4.
+- Para Enduring Charms, desbloquea Juju Melding y lleva **tres King Talismans (azul oscuro, rareza 6)** que no te importe utilizar para la fusión. Esta es la combinación que recomiendo y corresponde al Rank 4. Los talismanes Queen y Dragon también sirven, pero recomiendo usar tres King Talismans.
 - Comprueba que haya espacio en el álbum de la Switch para un vídeo de 30 segundos.
 - Guarda en la aldea Kokoto con todo preparado. Volverás a esta partida guardada después de cada intento fallido.
 
@@ -123,7 +123,7 @@ No restes el Stopwatch manualmente. En el primer intento, deja Correction en 0. 
 1. Con el juego aún suspendido, comprueba los valores de **Final Countdown**.
 2. **Reanuda MHGU y pulsa Start Countdown exactamente en el mismo instante.**
 3. Camina hasta la recepcionista de tu habitación. No corras.
-4. Selecciona Juju Melding para Enduring Charms y elige los tres talismanes de rareza 5–7.
+4. Selecciona Juju Melding para Enduring Charms y elige los tres King Talismans (azul oscuro).
 5. Avanza hasta la confirmación final, pero todavía no entregues los talismanes.
 6. La aplicación emite una señal cada segundo durante los últimos diez segundos y una señal larga al llegar a cero. **Confirma la fusión al escuchar esa última señal.**
 
@@ -142,7 +142,7 @@ No guardar un intento fallido conserva los materiales utilizados en las combinac
 
 ## 11. Corrige el tiempo
 
-Usa **Around a Frame** con el frame objetivo, el tipo de talismán correcto y **Source: Melding** para examinar los talismanes cercanos. **Halcyon / Juju Meld** permite consultar todos los resultados previstos para un frame de entrega concreto; utiliza Juju y Rank 4 si entregas tres talismanes de rareza 5–7.
+Usa **Around a Frame** con el frame objetivo, el tipo de talismán correcto y **Source: Melding** para examinar los talismanes cercanos. **Halcyon / Juju Meld** permite consultar todos los resultados previstos para un frame de entrega concreto; utiliza Juju y Rank 4 para los tres King Talismans recomendados.
 
 Compara las predicciones con los resultados reales. Si descubres que confirmaste 15 frames demasiado tarde, introduce **−15 frames** (o −0,5 segundos) en **Correction** para el siguiente intento. Si confirmaste demasiado pronto, utiliza una corrección positiva. Una corrección positiva aumenta la espera; una negativa la reduce.
 
